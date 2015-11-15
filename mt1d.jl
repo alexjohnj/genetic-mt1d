@@ -1,3 +1,4 @@
+module MT1D
 """
 MT1D calculates the apparent resistivity and phase for an `N` layer 1D
 resistivity model.
@@ -9,7 +10,7 @@ resistivity model.
 
 ## Returns:
 - `ρa` -- A vector of apparent surface resistivities computed from the model.
-- `Φ` -- A vector of phases computed from the model.
+- `Φ`  -- A vector of phases computed from the model.
 """
 function mt1d(model::Matrix, fs::Vector)
     const μ0 = 4E-7 * π;
@@ -37,4 +38,5 @@ function mt1d(model::Matrix, fs::Vector)
     Φ  = 90 - angle(Z) * 180 / π;
 
     return (vec(ρa), vec(Φ));
+end
 end
