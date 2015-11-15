@@ -1,8 +1,18 @@
-const μ0 = 4E-7 * π;
+"""
+MT1D calculates the apparent resistivity and phase for an `N` layer 1D
+resistivity model.
 
-function MT1D(model::Matrix{Float64}, fs::Vector{Float64})
-    # Model = Nx2 matrix with depths in column 1 and resistivities in column 2
-    # fs = Vector of frequencies
+## Arguments:
+- `model` -- An `N`×2 matrix with depth to the top of each layer in the 1st
+    column and resistivity in the second.
+- `fs` -- A vector of frequencies to evaluate the model at.
+
+## Returns:
+- `ρa` -- A vector of apparent surface resistivities computed from the model.
+- `Φ` -- A vector of phases computed from the model.
+"""
+function mt1d(model::Matrix, fs::Vector)
+    const μ0 = 4E-7 * π;
 
     zs = model[:,1];
     ρs = model[:,2];
@@ -12,7 +22,7 @@ function MT1D(model::Matrix{Float64}, fs::Vector{Float64})
     fs = reshape(fs, (1, length(fs)));
     ρs = vec(ρs);
 
-    # N x len(fs) matrix with k(row,col) corresponding to k(N,fsIdx)
+    # N x length(fs) matrix with k(row,col) corresponding to k[N,fsIdx]
     k = sqrt(-im * 8E-7 * π^2 * (ρs.^-1) * fs);
     C = 1 ./ k[end,:];
     Δz = zs[2:end] - zs[1:end-1];
