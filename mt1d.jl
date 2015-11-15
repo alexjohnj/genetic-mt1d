@@ -1,4 +1,7 @@
 module MT1D
+export mt1d
+export rms
+
 """
 MT1D calculates the apparent resistivity and phase for an `N` layer 1D
 resistivity model.
@@ -38,5 +41,21 @@ function mt1d(model::Matrix, fs::Vector)
     Φ  = 90 - angle(Z) * 180 / π;
 
     return (vec(ρa), vec(Φ));
+end
+
+"""
+rms finds the root mean squared misfit between a set of observations and a
+model while accounting for uncertainty.
+
+## Arguments:
+- `obs`   -- A vector f observations.
+- `model` -- A vector of models.
+- `ϵ`     -- A vector of uncertainties.
+
+## Returns:
+- A real number indicating the RMS value.
+"""
+function rms(obs::Vector, model::Vector, ϵ::Vector)
+    sqrt(sum(((obs - model) ./ ϵ).^2) / (2 * length(obs)))
 end
 end
