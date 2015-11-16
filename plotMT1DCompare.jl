@@ -2,6 +2,18 @@ include("./mt1d.jl");
 using MT1D
 using PyPlot
 
+"""
+Calculate the apparent resistivity and phase from a model and then
+plot a comparison of the results with actual data.
+
+## Arguments:
+- `modelFile` -- The path to a file containing the resistivity model.
+- `dataFile`  -- The path to a file containing a data matrix formatted
+  as [T,ρ,Φ,σρ,σΦ]
+
+## Returns:
+- Nothing
+"""
 function plotMT1DCompare(modelFile::AbstractString, dataFile::AbstractString)
     modelFileHandle = open(modelFile);
     model = readdlm(modelFileHandle);
