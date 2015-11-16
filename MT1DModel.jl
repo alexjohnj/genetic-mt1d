@@ -1,6 +1,8 @@
+include("./mt1d.jl")
 module MT1DModel
+using MT1D
 
-export createRandomModel
+export createRandomModel, calculateRMS!
 
 type MTModel
     model::Matrix
@@ -31,6 +33,29 @@ function createRandomModel(N::Integer, zMax::Integer, resRange::Range)
     model[2:end, 2] = rand(resRange, (N-1, 1))
 
     MTModel(model)
+end
+
+"""
+Updates the `RMS` field of an MTModel type using the data
+matrix. Matrix should be of the form, [T,ρ,Φ,σρ,σΦ].
+## Arguments:
+- `model` -- The `MTModel` to calculate the RMS of.
+- `data`  -- The data matrix to use in the RMS calculation.
+
+# Returns:
+- The total RMS for the MTModel type.
+"""
+function calculateRMS!(model::MTModel, data)
+    fs = data[:,1].^-1;
+    ρa, Φ = mt1d(model.model, fs)
+
+    ρRMS = rms(data[:,2], ρa, data[:,4])
+    ΦRMS = rms(data[:,3], Φ, data[:,5])
+    totalRMS = sqrt(ρRMS^2 + ΦRMS^2)
+
+    model.RMS = totalRMS
+
+    return totalRMS;
 end
 
 end
