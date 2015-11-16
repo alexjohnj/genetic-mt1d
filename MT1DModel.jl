@@ -16,11 +16,14 @@ end
 
 """
 Creates a `MTModel` type with a model matrix of size Nx2 and no
-calculated RMS.
+calculated RMS. If a data matrix is supplied, the model will also have
+its RMS calculated.
 # Arguments:
-- `N`        -- The number of layers to use.
-- `zMax`     -- The maximum depth to the top of the layers.
-- `resRange` -- The range of resistivities to use in the model.
+- `N`          -- The number of layers to use.
+- `zMax`       -- The maximum depth to the top of the layers.
+- `resRange`   -- The range of resistivities to use in the model.
+- `data` (Opt) -- A data matrix from which to calculate an RMS misfit
+  for the model.
 
 # Returns:
 - An `MTModel` type.
@@ -33,6 +36,12 @@ function createRandomModel(N::Integer, zMax::Integer, resRange::Range)
     model[2:end, 2] = rand(resRange, (N-1, 1))
 
     MTModel(model)
+end
+
+function createRandomModel(N::Integer, zMax::Integer, resRange::Range, data)
+    model = createRandomModel(N, zMax, resRange)
+    calculateRMS!(model, data)
+    return model
 end
 
 """
@@ -55,7 +64,7 @@ function calculateRMS!(model::MTModel, data)
 
     model.RMS = totalRMS
 
-    return totalRMS;
+    return totalRMS
 end
 
 end
