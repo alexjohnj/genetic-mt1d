@@ -2,15 +2,17 @@ include("./mt1d.jl")
 module MT1DModel
 using MT1D
 
-export createRandomModel, calculateRMS!
+export createRandomModel, calculateRMS!, mutate!
 
 type MTModel
     model::Matrix
     N::Integer
+    zMax::Integer
+    resRange::Range
     RMS
 
-    function MTModel(model::Matrix)
-        new(model, size(model)[1], nothing)
+    function MTModel(model::Matrix, zMax::Integer, resRange::Range)
+        new(model, size(model)[1], zMax, resRange, nothing)
     end
 end
 
@@ -35,7 +37,7 @@ function createRandomModel(N::Integer, zMax::Integer, resRange::Range)
     model[2:end, 1] = rand(1:zMax, (N-1, 1))
     model[2:end, 2] = rand(resRange, (N-1, 1))
 
-    MTModel(model)
+    MTModel(model, zMax, resRange)
 end
 
 function createRandomModel(N::Integer, zMax::Integer, resRange::Range, data)
@@ -65,6 +67,29 @@ function calculateRMS!(model::MTModel, data)
     model.RMS = totalRMS
 
     return totalRMS
+end
+
+"""
+Selects two random layers to mutate their depth and resistivity.
+
+## Arguments:
+`model` -- The `MTModel` type to mutate.
+`chance` -- The probability of mutation (between 0 and 1).
+"""
+function mutate!(model::MTModel, chance::Real)
+    if rand() > chance
+        return
+    end
+
+    mutatedResLayer = rand(2:model.N)
+    mutatedDepthLayer = rand(2:model.N)
+
+    mutatedRes = rand(model.resRange)
+    mutatedDepth = rand(1:model.zMax)
+
+    # TODO: Check we don't exceed maxDepth and resRange
+    model.model[mutatedDepthLayer,1] += mutatedDepth
+    model.model[mutatedResLayer,2] += mutatedRes
 end
 
 end
