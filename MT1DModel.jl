@@ -2,7 +2,7 @@ include("./mt1d.jl")
 module MT1DModel
 using MT1D
 
-export createRandomModel, calculateRMS!, mutate!
+export createRandomModel, calculateRMS!, mutate!, crossover
 
 type MTModel
     model::Matrix
@@ -90,6 +90,29 @@ function mutate!(model::MTModel, chance::Real)
     # TODO: Check we don't exceed maxDepth and resRange
     model.model[mutatedDepthLayer,1] += mutatedDepth
     model.model[mutatedResLayer,2] += mutatedRes
+end
+
+function crossover(modelA::MTModel, modelB::MTModel)
+    # TODO: Audit this and maybe? rewrite
+    parents = (modelA, modelB)
+
+    childModel = zeros(modelA.N, 2)
+
+    topParent = rand(1:2)
+    upperPivotParent = rand(1:2)
+    lowerPivotParent = rand(1:2)
+
+    pivotPoint = rand(2:modelA.N)
+    childModel[1,:] = parents[topParent].model[1,:]
+    if pivotPoint == modelA.N
+        childModel[2:end,:] = parents[upperPivotParent].model[2:end,:]
+    else
+        childModel[2:pivotPoint,:] = parents[upperPivotParent].model[2:pivotPoint,:]
+        childModel[pivotPoint+1:end,:] = parents[lowerPivotParent].model[pivotPoint+1:end,:]
+    end
+
+    # Assume models have the same zMax and resRange
+    MTModel(childModel, modelA.zMax, modelA.resRange)
 end
 
 end
