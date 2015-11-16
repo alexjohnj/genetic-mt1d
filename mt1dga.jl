@@ -2,6 +2,7 @@ include("./mt1d.jl")
 module MT1DGA
 using GeneticAlgorithms
 using MT1D
+using Debug
 
 global nLayers  = 3
 global maxDepth = 100_000
@@ -71,8 +72,32 @@ function group_entities(pop::Array{MTModel})
     # TODO: Add stopping conditions here
 end
 
-function crossover(ents::Array{MTModel})
-    # This'll breed the best models somehow
+# TODO: Add type signature
+@debug function crossover(parents)
+    # Breeds two elite parents. The first layer of the child is
+    # selected randomly from the first layer of the two models. Then,
+    # a random pivot point is chosen. The layers above the pivot point
+    # are taken from one random parent while the layers below are
+    # taken from another (could be the same one). If the pivot point
+    # is the last layer, all the layers beneath the first layer come
+    # from the randomly selected above pivot parent.
+    global nLayers
+    childModel = zeros(nLayers, 2)
+
+    topParent = rand(1:2)
+    upperPivotParent = rand(1:2)
+    lowerPivotParent = rand(1:2)
+
+    pivotPoint = rand(2:nLayers)
+    childModel[1,:] = parents[topParent].model[1,:]
+    if pivotPoint == nLayers
+        childModel[2:end,:] = parents[upperPivotParent].model[2:end,:]
+    else
+        childModel[2:pivotPoint,:] = parents[upperPivotParent].model[2:pivotPoint,:]
+        childModel[pivotPoint+1:end,:] = parents[lowerPivotParent].model[pivotPoint+1:end,:]
+    end
+
+    MTModel(childModel)
 end
 
 function mutate(ent::MTModel)
