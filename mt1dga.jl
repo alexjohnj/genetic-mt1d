@@ -67,9 +67,18 @@ function isless(lhs::MTModel, rhs::MTModel)
     abs(lhs.fitness) > abs(rhs.fitness)
 end
 
-function group_entities(pop::Array{MTModel})
+function group_entities(pop::Array)
     # This'll select the best models to breed
-    # TODO: Add stopping conditions here
+    # TODO: Make this selection process much better
+    if pop[1].fitness <= 1.5
+        return
+    end
+
+    group = []
+    for ent in pop
+        push!(group, (pop[1], ent))
+    end
+    return group
 end
 
 # TODO: Add type signature
