@@ -2,7 +2,7 @@ include("./MT1DModel.jl")
 module MT1DGA
 using MT1DModel
 
-export MT1DModelPopulation, sortPopulation!, matePopulation!
+export MT1DModelPopulation, evolve!
 
 type MT1DModelPopulation
     size::Integer
@@ -35,8 +35,13 @@ end
 function matePopulation!(MTPop::MT1DModelPopulation)
     nParents = length(MTPop.pop)
     for i = 1:2:nParents-1
-        child = crossover(MTPop.pop[i], MTPop.pop[i+1])
-        push!(MTPop.pop, child)
+        childA, childB = crossover(MTPop.pop[i], MTPop.pop[i+1])
+        calculateRMS!(childA, MTPop.data)
+        calculateRMS!(childB, MTPop.data)
+        push!(MTPop.pop, childA, childB)
+        if length(MTPop.pop) >= MTPop.size
+            break
+        end
     end
 end
 
@@ -47,12 +52,32 @@ function fillPopulation!(MTPop::MT1DModelPopulation)
     end
 end
 
-function advanceGeneration(MTPop::MT1DModelPopulation)
-    sortPopulation!(MT1DModelPopulation.pop)
-    cullPopulation!(MT1DModelPopulation.pop, 0.6)
-    matePopulation!(MT1DModelPopulation.pop)
-    fillPopulation!(MT1DModelPopulation.pop)
-    sortPopulation!(MT1DModelPopulation.pop)
+function mutatePopulation!(MTPop::MT1DModelPopulation, mutationRate::Real)
+    for i in 1:MTPop.size
+        mutate!(MTPop.pop[i], mutationRate)
+    end
+end
+
+function advanceGeneration!(MTPop::MT1DModelPopulation)
+    sortPopulation!(MTPop.pop)
+    cullPopulation!(MTPop, 0.70)
+    matePopulation!(MTPop)
+    fillPopulation!(MTPop)
+    mutatePopulation!(MTPop, 0.01)
+    sortPopulation!(MTPop.pop)
+    MTPop.gen += 1
+end
+
+function evolve!(MTPop::MT1DModelPopulation, maxgen=1000)
+    while MTPop.gen <= maxgen
+        advanceGeneration!(MTPop)
+        if MTPop.pop[1].RMS <= 1.5
+            break
+        end
+        if MTPop.gen % 50 == 0
+            println("Generation: $(MTPop.gen)\tLeading RMS: $(MTPop.pop[1].RMS)\tSize: $(length(MTPop.pop))")
+        end
+    end
 end
 
 end

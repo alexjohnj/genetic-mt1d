@@ -36,6 +36,7 @@ function createRandomModel(N::Integer, zMax::Integer, resRange::Range)
     model[1,2] = rand(resRange)
     model[2:end, 1] = rand(1:zMax, (N-1, 1))
     model[2:end, 2] = rand(resRange, (N-1, 1))
+    model = sortrows(model)
 
     MTModel(model, zMax, resRange)
 end
@@ -89,30 +90,42 @@ function mutate!(model::MTModel, chance::Real)
 
     # TODO: Check we don't exceed maxDepth and resRange
     model.model[mutatedDepthLayer,1] += mutatedDepth
+    while model.model[mutatedDepthLayer,1] > model.zMax
+        model.model[mutatedDepthLayer,1] -= rand(1:model.zMax)
+    end
+
     model.model[mutatedResLayer,2] += mutatedRes
+    while model.model[mutatedResLayer,2] > maximum(model.resRange)
+        model.model[mutatedResLayer,2] -= rand(model.resRange)
+    end
+    model.model = sortrows(model.model)
 end
 
 function crossover(modelA::MTModel, modelB::MTModel)
     # TODO: Audit this and maybe? rewrite
     parents = (modelA, modelB)
 
-    childModel = zeros(modelA.N, 2)
+    childModelA = zeros(modelA.N, 2)
+    childModelB = zeros(modelA.N, 2)
 
-    topParent = rand(1:2)
-    upperPivotParent = rand(1:2)
-    lowerPivotParent = rand(1:2)
+    childModelA[1,:] = modelB.model[1,:]
+    childModelB[1,:] = modelA.model[1,:]
 
     pivotPoint = rand(2:modelA.N)
-    childModel[1,:] = parents[topParent].model[1,:]
     if pivotPoint == modelA.N
-        childModel[2:end,:] = parents[upperPivotParent].model[2:end,:]
+        childModelA[2:end,:] = modelB.model[2:end,:]
+        childModelB[2:end,:] = modelA.model[2:end,:]
     else
-        childModel[2:pivotPoint,:] = parents[upperPivotParent].model[2:pivotPoint,:]
-        childModel[pivotPoint+1:end,:] = parents[lowerPivotParent].model[pivotPoint+1:end,:]
+        childModelA[2:pivotPoint,:] = modelB.model[2:pivotPoint,:]
+        childModelA[pivotPoint+1:end,:] = modelB.model[pivotPoint+1:end,:]
+        childModelB[2:pivotPoint,:] = modelA.model[2:pivotPoint,:]
+        childModelA[pivotPoint+1:end,:] = modelA.model[pivotPoint+1:end,:]
     end
 
+    childModelA = sortrows(childModelA)
+    childModelB = sortrows(childModelB)
     # Assume models have the same zMax and resRange
-    MTModel(childModel, modelA.zMax, modelA.resRange)
+    (MTModel(childModelA, modelA.zMax, modelA.resRange), MTModel(childModelB, modelA.zMax, modelA.resRange))
 end
 
 end
