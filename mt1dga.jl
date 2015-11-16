@@ -51,7 +51,13 @@ function create_entity(idx::Integer)
 end
 
 function fitness(ent::MTModel)
-    # Here we will calculate each entity's RMS misfit
+    global data
+    fs = data[:,1].^-1;
+    ρa, Φ = mt1d(ent.model, fs);
+
+    ρRMS = rms(data[:,2], ρa, data[:,4]);
+    ΦRMS = rms(data[:,3], Φ, data[:,5]);
+    totalRMS = sqrt(ρRMS^2 + ΦRMS^2);
 end
 
 # Scores closer to zero are better so override this.
