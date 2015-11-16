@@ -2,7 +2,7 @@ include("./MT1DModel.jl")
 module MT1DGA
 using MT1DModel
 
-export MT1DModelPopulation
+export MT1DModelPopulation, sortPopulation!
 
 type MT1DModelPopulation
     size::Integer
@@ -22,5 +22,13 @@ type MT1DModelPopulation
         new(size, layers, zMax, resRange, data, P, 1)
     end
 end
+
+function sortPopulation!(pop::Array)
+    sort!(pop, lt=(a,b) -> a.RMS < b.RMS)
+end
+
+# function advanceGeneration(MTPop::MT1DModelPopulation)
+
+# end
 
 end
