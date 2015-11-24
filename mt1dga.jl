@@ -24,7 +24,7 @@ type MT1DModelPopulation
 end
 
 function sortPopulation!(pop::Array)
-    sort!(pop, lt=(a,b) -> a.RMS < b.RMS)
+    sort!(pop, lt=(a,b) -> a.fitness < b.fitness)
 end
 
 function cullPopulation!(MTPop::MT1DModelPopulation, elitismRate::Real)
@@ -36,8 +36,8 @@ function matePopulation!(MTPop::MT1DModelPopulation)
     nParents = length(MTPop.pop)
     for i = 1:2:nParents-1
         childA, childB = crossover(MTPop.pop[i], MTPop.pop[i+1])
-        calculateRMS!(childA, MTPop.data)
-        calculateRMS!(childB, MTPop.data)
+        calculateFitness!(childA, MTPop.data)
+        calculateFitness!(childB, MTPop.data)
         push!(MTPop.pop, childA, childB)
         if length(MTPop.pop) >= MTPop.size
             break
@@ -69,13 +69,15 @@ function advanceGeneration!(MTPop::MT1DModelPopulation)
 end
 
 function evolve!(MTPop::MT1DModelPopulation, maxgen=1000)
-    while MTPop.gen <= maxgen
+    while MTPop.gen < maxgen
         advanceGeneration!(MTPop)
-        if MTPop.pop[1].RMS <= 1.5
+        if MTPop.pop[1].fitness <= 1.5
+            println("*"^80)
+            @printf("Gen: %d\tFitness: %.2f\tSize: %d\n", MTPop.gen, MTPop.pop[1].fitness, length(MTPop.pop))
             break
         end
         if MTPop.gen % 50 == 0
-            println("Generation: $(MTPop.gen)\tLeading RMS: $(MTPop.pop[1].RMS)\tSize: $(length(MTPop.pop))")
+            @printf("Gen: %d\tFitness: %.2f\tSize: %d\n", MTPop.gen, MTPop.pop[1].fitness, length(MTPop.pop))
         end
     end
 end

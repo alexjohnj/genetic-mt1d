@@ -2,17 +2,17 @@ include("./mt1d.jl")
 module MT1DModel
 using MT1D
 
-export createRandomModel, calculateRMS!, mutate!, crossover
+export createRandomModel, calculateFitness!, mutate!, crossover
 
 type MTModel
     model::Matrix
     N::Integer
     zMax::Integer
     resRange::Range
-    RMS
+    fitness::Real
 
     function MTModel(model::Matrix, zMax::Integer, resRange::Range)
-        new(model, size(model)[1], zMax, resRange, nothing)
+        new(model, size(model)[1], zMax, resRange, NaN)
     end
 end
 
@@ -33,8 +33,12 @@ its RMS calculated.
 function createRandomModel(N::Integer, zMax::Integer, resRange::Range)
     model = zeros(N, 2)
     model = zeros(N, 2)
+
     model[1,2] = rand(resRange)
-    model[2:end, 1] = rand(1:zMax, (N-1, 1))
+    for n in 2:N
+        depthRange = (n - 1) * zMax / N : n*zMax/N
+        model[n, 1] = rand(depthRange)
+    end
     model[2:end, 2] = rand(resRange, (N-1, 1))
     model = sortrows(model)
 
@@ -43,31 +47,28 @@ end
 
 function createRandomModel(N::Integer, zMax::Integer, resRange::Range, data)
     model = createRandomModel(N, zMax, resRange)
-    calculateRMS!(model, data)
+    calculateFitness!(model, data)
     return model
 end
 
 """
-Updates the `RMS` field of an MTModel type using the data
-matrix. Matrix should be of the form, [T,ρ,Φ,σρ,σΦ].
+Updates the `fitness` field of an MTModel type using the data
+matrix. Matrix should be of the form, [T,ρ,Φ,σρ,σΦ]. Fitness is
+defined as the quadratic norm of the model and data.
 ## Arguments:
 - `model` -- The `MTModel` to calculate the RMS of.
 - `data`  -- The data matrix to use in the RMS calculation.
 
 # Returns:
-- The total RMS for the MTModel type.
+- The current fitness of the model.
 """
-function calculateRMS!(model::MTModel, data)
+function calculateFitness!(model::MTModel, data)
     fs = data[:,1].^-1;
     ρa, Φ = mt1d(model.model, fs)
 
-    ρRMS = rms(data[:,2], ρa, data[:,4])
-    ΦRMS = rms(data[:,3], Φ, data[:,5])
-    totalRMS = sqrt(ρRMS^2 + ΦRMS^2)
-
-    model.RMS = totalRMS
-
-    return totalRMS
+    qNorm = norm(data[:,2] - ρa)^2 + norm(data[:,3] - Φ)^2
+    model.fitness = qNorm
+    return qNorm
 end
 
 """
@@ -103,6 +104,16 @@ end
 
 function crossover(modelA::MTModel, modelB::MTModel)
     # TODO: Audit this and maybe? rewrite
+    # Select a random layer to swap between the models
+
+    # swapLayer = rand(1:modelA.N)
+    # childModelA = deepcopy(modelA)
+    # childModelB = deepcopy(modelB)
+    # childModelA.model[swapLayer,:], childModelB.model[swapLayer,:] = childModelB.model[swapLayer,:], childModelA.model[swapLayer,:]
+    # childModelA.model = sortrows(childModelA.model)
+    # childModelB.model = sortrows(childModelB.model)
+    # return (childModelA, childModelB)
+
     parents = (modelA, modelB)
 
     childModelA = zeros(modelA.N, 2)
@@ -117,9 +128,9 @@ function crossover(modelA::MTModel, modelB::MTModel)
         childModelB[2:end,:] = modelA.model[2:end,:]
     else
         childModelA[2:pivotPoint,:] = modelB.model[2:pivotPoint,:]
-        childModelA[pivotPoint+1:end,:] = modelB.model[pivotPoint+1:end,:]
-        childModelB[2:pivotPoint,:] = modelA.model[2:pivotPoint,:]
         childModelA[pivotPoint+1:end,:] = modelA.model[pivotPoint+1:end,:]
+        childModelB[2:pivotPoint,:] = modelA.model[2:pivotPoint,:]
+        childModelB[pivotPoint+1:end,:] = modelB.model[pivotPoint+1:end,:]
     end
 
     childModelA = sortrows(childModelA)
