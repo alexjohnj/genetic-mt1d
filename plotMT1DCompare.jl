@@ -29,8 +29,8 @@ function plotMT1DCompare(modelFile::AbstractString, dataFile::AbstractString)
     ΦData  = data[:,3];
 
     ρa, Φa = mt1d(model, fs);
-    σρData = ρData * 0.12;
-    σΦData = ΦData * 0.09;
+    σρData = data[:,4];
+    σΦData = data[:,5];
 
     rmsΦ = rms(ΦData, Φa, σΦData);
     rmsρ = rms(ρData, ρa, σρData);
