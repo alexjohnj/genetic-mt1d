@@ -16,11 +16,11 @@ plot a comparison of the results with actual data.
 """
 function plotMT1DCompare(modelFile::AbstractString, dataFile::AbstractString)
     modelFileHandle = open(modelFile);
-    model = readdlm(modelFileHandle);
+    model = readdlm(modelFileHandle, Float64);
     close(modelFileHandle);
 
     dataFileHandle = open(dataFile);
-    data = readdlm(dataFileHandle);
+    data = readdlm(dataFileHandle, Float64);
     close(dataFileHandle);
 
     Ts     = data[:,1];
