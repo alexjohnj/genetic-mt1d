@@ -65,6 +65,9 @@ function crossover(a::Chromosome, b::Chromosome)
     cA.model = weight * a.model + (1-weight) * b.model;
     cB.model = (1-weight) * a.model + (1-weight) * b.model;
 
+    cA.model = sortrows(cA.model)
+    cB.model = sortrows(cB.model)
+
     return(cA, cB)
 end
 
@@ -85,4 +88,5 @@ function mutate!(c::Chromosome, Pm::Real)
             c.model[n,2] = rand(rParams.min:rParams.res:rParams.max)
         end
     end
+    sortrows(c.model)
 end

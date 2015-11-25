@@ -6,6 +6,7 @@ type Population
     data::Matrix
     zBounds::Array{LayerBC}
     rBounds::Array{LayerBC}
+    generation::Integer
 
     function Population(Q::Integer, data::Matrix, zBounds::Array{LayerBC}, rBounds::Array{LayerBC})
         if length(zBounds) != length(rBounds)
