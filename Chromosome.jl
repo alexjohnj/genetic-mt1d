@@ -1,6 +1,7 @@
 include("./mt1d.jl")
 using MT1D
-type LayerCodeParameters
+
+type LayerBC
     min::Integer
     max::Integer
     res::Integer
@@ -9,11 +10,11 @@ end
 type Chromosome
     model::Matrix
     N::Integer
-    zCodeParams::Array{LayerCodeParameters}
-    rCodeParams::Array{LayerCodeParameters}
+    zCodeParams::Array{LayerBC}
+    rCodeParams::Array{LayerBC}
     fitness::Real
 
-    function Chromosome(m::Matrix, z::Array{LayerCodeParameters}, r::Array{LayerCodeParameters})
+    function Chromosome(m::Matrix, z::Array{LayerBC}, r::Array{LayerBC})
         if (z[1].min != 0 || z[1].max != 0)
             error("Range of depths for first layer must be (0,0)!")
         end
@@ -25,7 +26,7 @@ type Chromosome
     end
 end
 
-function createRandomModel(N::Integer, zParams::Array{LayerCodeParameters}, rParams::Array{LayerCodeParameters})
+function createRandomModel(N::Integer, zParams::Array{LayerBC}, rParams::Array{LayerBC})
     if zParams[1].min != 0 || zParams[1].max != 0
         error("Range of depths for first layer must be (0,0)!")
     end
@@ -46,16 +47,14 @@ function createRandomModel(N::Integer, zParams::Array{LayerCodeParameters}, rPar
     Chromosome(model, zParams, rParams)
 end
 
-function calculateFitness!(c::Chromosome)
-    global data
-
+function calculateFitness!(c::Chromosome, data::Matrix)
     fs = data[:,1].^-1
     ρ, Φ = mt1d(c.model, fs)
 
     RMSρ = rms(data[:,2], ρ, data[:,4])^2
     RMSΦ = rms(data[:,3], Φ, data[:,5])^2
 
-    c.fitness = sqrt(RMSρ^2 + RMSϕ^2)
+    c.fitness = sqrt(RMSρ^2 + RMSΦ^2)
 end
 
 function crossover(a::Chromosome, b::Chromosome)
