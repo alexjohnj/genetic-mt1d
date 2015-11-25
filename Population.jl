@@ -19,7 +19,7 @@ type Population
             push!(P, createRandomModel(N, zBounds, rBounds))
             calculateFitness!(P[i], data)
         end
-        new(Q, P, data, zBounds, rBounds)
+        new(Q, P, data, zBounds, rBounds, 1)
     end
 end
 
@@ -91,4 +91,29 @@ function createNextGeneration!(P::Population, Pe::Real)
     else
         P.cs = nextGen
     end
+end
+
+function evolve!(P::Population, maxGen=1000)
+    @printf("Generation: %d\tBest RMS: %.2f\tSize: %d\n", P.generation, P.cs[1].fitness, length(P.cs))
+    while P.generation < maxGen
+        sort!(P.cs, lt=(a,b) -> a.fitness < b.fitness)
+        createNextGeneration!(P, 0.1)
+        @sync @parallel for i = 1:P.Q
+            mutate!(P.cs[i], 0.01)
+            calculateFitness!(P.cs[i], P.data)
+        end
+
+        sort!(P.cs, lt=(a,b) -> a.fitness < b.fitness)
+        P.generation += 1
+
+        if P.cs[1].fitness <= 1.5
+            break
+        end
+
+        if P.generation % 100 == 0
+            @printf("Generation: %d\tBest RMS: %.2f\tSize: %d\n", P.generation, P.cs[1].fitness, length(P.cs))
+        end
+    end
+    println("*"^80)
+    @printf("Generation: %d\tBest RMS: %.2f\tSize: %d\n", P.generation, P.cs[1].fitness, length(P.cs))
 end
