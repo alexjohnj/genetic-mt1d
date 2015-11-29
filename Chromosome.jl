@@ -55,6 +55,12 @@ function calculateFitness!(c::Chromosome, data::Matrix)
     RMSΦ = rms(data[:,3], Φ, data[:,5])^2
 
     c.fitness = sqrt(RMSρ^2 + RMSΦ^2)
+
+    # Are the model depths sorted from lowest to highest? Apply a
+    # penalty if they aren't
+    if !issorted(c.model[:,1])
+        c.fitness += 50
+    end
 end
 
 function crossover(a::Chromosome, b::Chromosome)
@@ -64,9 +70,6 @@ function crossover(a::Chromosome, b::Chromosome)
     cB = deepcopy(b)
     cA.model = weight * a.model + (1-weight) * b.model;
     cB.model = (1-weight) * a.model + (1-weight) * b.model;
-
-    cA.model = sortrows(cA.model)
-    cB.model = sortrows(cB.model)
 
     return(cA, cB)
 end
