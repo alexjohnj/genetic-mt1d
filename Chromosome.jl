@@ -51,8 +51,8 @@ function calculateFitness!(c::Chromosome, data::Matrix)
     fs = data[:,1].^-1
     ρ, Φ = mt1d(c.model, fs)
 
-    RMSρ = rms(data[:,2], ρ, data[:,4])^2
-    RMSΦ = rms(data[:,3], Φ, data[:,5])^2
+    RMSρ = rms(data[:,2], ρ, data[:,4])
+    RMSΦ = rms(data[:,3], Φ, data[:,5])
 
     c.fitness = sqrt(RMSρ^2 + RMSΦ^2)
 
