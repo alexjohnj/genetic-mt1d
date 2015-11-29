@@ -86,12 +86,29 @@ function calculateFitness!(c::Chromosome, data::Matrix)
 end
 
 function crossover(a::Chromosome, b::Chromosome)
-    weight = rand()
+    # Implements SBX crossover
+    const n = 2 # Distribution index
+    u = rand()
+
+    β = 0
+    if u <= 0.5
+        β = (2u)^(1/(n+1))
+    else
+        β = (1/(2*(1-u)))^(1/(n+1))
+    end
 
     cA = deepcopy(a)
     cB = deepcopy(b)
-    cA.model = weight * a.model + (1-weight) * b.model;
-    cB.model = (1-weight) * a.model + (1-weight) * b.model;
+
+    cA.model = 0.5 * ((1-β)*a.model + (1-β)*b.model)
+    cB.model = 0.5 * ((1-β)*a.model + (1+β)*b.model)
+
+    # Force first layer to have zero depth
+    cA.model[1,1] = 0
+    cB.model[1,1] = 0
+
+    cA.model = sortrows(cA.model)
+    cB.model = sortrows(cB.model)
 
     return(cA, cB)
 end
