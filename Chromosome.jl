@@ -61,6 +61,28 @@ function calculateFitness!(c::Chromosome, data::Matrix)
     if !issorted(c.model[:,1])
         c.fitness += 50
     end
+
+    # Do any of the layers in the current model exceed the search
+    # boundaries? Apply a penalty proportional to how much they exceed
+    # them if they do.
+    zPenaltyFactor = 0.01
+    rPenaltyFactor = 0.1
+    for N in 1:c.N
+        zCodeParams = c.zCodeParams[N]
+        rCodeParams = c.rCodeParams[N]
+        layerModel = c.model[N,:]
+
+        if layerModel[1] < zCodeParams.min
+            c.fitness += abs(zCodeParams.min - layerModel[1]) * zPenaltyFactor
+        elseif layerModel[1] > zCodeParams.max
+            c.fitness += abs(layerModel[1] - zCodeParams.max) * zPenaltyFactor
+        end
+        if layerModel[2] < rCodeParams.min
+            c.fitness += abs(rCodeParams.min - layerModel[2]) * rPenaltyFactor
+        elseif layerModel[2] > rCodeParams.max
+            c.fitness += abs(layerModel[2] - rCodeParams.max) * rPenaltyFactor
+        end
+    end
 end
 
 function crossover(a::Chromosome, b::Chromosome)
