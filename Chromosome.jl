@@ -65,8 +65,8 @@ function calculateFitness!(c::Chromosome, data::Matrix)
     # Do any of the layers in the current model exceed the search
     # boundaries? Apply a penalty proportional to how much they exceed
     # them if they do.
-    zPenaltyFactor = 0.01
-    rPenaltyFactor = 0.1
+    zPenaltyFactor = 2
+    rPenaltyFactor = 2
     for N in 1:c.N
         zCodeParams = c.zCodeParams[N]
         rCodeParams = c.rCodeParams[N]
