@@ -4,7 +4,7 @@ using MT1D
 type LayerBC
     min::Integer
     max::Integer
-    res::Integer
+    res::Integer # Number of significant figures desired for parameter
 end
 
 type Chromosome
@@ -36,12 +36,13 @@ function createRandomModel(N::Integer, zParams::Array{LayerBC}, rParams::Array{L
     end
 
     model = zeros(N,2)
-    model[1,2] = rand(rParams[1].min:rParams[1].res:rParams[1].max)
+    model[1,2] = rand(rParams[1].min:10.0^-rParams[1].res:rParams[1].max)
+    model[1,2] = signif(rand(rParams[1].min:rParams[1].max), rParams[1].res)
     for n = 2:N
         layerZParams = zParams[n]
         layerRParams = rParams[n]
-        model[n,1] = rand(layerZParams.min:layerZParams.res:layerZParams.max)
-        model[n,2] = rand(layerRParams.min:layerRParams.res:layerRParams.max)
+        model[n,1] = signif(rand(layerZParams.min:layerZParams.max), layerZParams.res)
+        model[n,2] = signif(rand(layerRParams.min:layerRParams.max), layerRParams.res)
     end
 
     Chromosome(model, zParams, rParams)
@@ -107,6 +108,13 @@ function crossover(a::Chromosome, b::Chromosome)
     cA.model[1,1] = 0
     cB.model[1,1] = 0
 
+
+    for n in 1:cA.N
+        cA.model[n,1] = signif(cA.model[n,1], cA.zCodeParams[n].res)
+        cA.model[n,2] = signif(cA.model[n,2], cA.rCodeParams[n].res)
+        cB.model[n,1] = signif(cB.model[n,1], cB.zCodeParams[n].res)
+        cB.model[n,2] = signif(cB.model[n,2], cB.rCodeParams[n].res)
+    end
     cA.model = sortrows(cA.model)
     cB.model = sortrows(cB.model)
 
@@ -120,15 +128,16 @@ function mutate!(c::Chromosome, Pm::Real)
             # Do nothing to the depth if this is the top layer
             if n != 1
                 zParams = c.zCodeParams[n]
-                c.model[n,1] = rand(zParams.min:zParams.res:zParams.max)
+                c.model[n,1] = signif(rand(zParams.min:zParams.max), zParams.res)
+                sortrows(c.model)
             end
         end
 
         # Mutate resistivity
         if rand() < Pm
             rParams = c.rCodeParams[n]
-            c.model[n,2] = rand(rParams.min:rParams.res:rParams.max)
+            c.model[n,2] = signif(rand(rParams.min:rParams.max), rParams.res)
+            sortrows(c.model)
         end
     end
-    sortrows(c.model)
 end
