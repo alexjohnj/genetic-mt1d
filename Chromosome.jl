@@ -101,7 +101,7 @@ function crossover(a::Chromosome, b::Chromosome)
     cA = deepcopy(a)
     cB = deepcopy(b)
 
-    cA.model = 0.5 * ((1-β)*a.model + (1-β)*b.model)
+    cA.model = 0.5 * ((1+β)*a.model + (1-β)*b.model)
     cB.model = 0.5 * ((1-β)*a.model + (1+β)*b.model)
 
     # Force first layer to have zero depth
