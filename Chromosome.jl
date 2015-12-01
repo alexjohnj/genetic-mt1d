@@ -87,38 +87,87 @@ function calculateFitness!(c::Chromosome, data::Matrix)
 end
 
 function crossover(a::Chromosome, b::Chromosome)
-    # Implements SBX crossover
-    const n = 2 # Distribution index
-    u = rand()
-
-    β = 0
-    if u <= 0.5
-        β = (2u)^(1/(n+1))
-    else
-        β = (1/(2*(1-u)))^(1/(n+1))
-    end
-
+    const η = 2 # Distribution index
     cA = deepcopy(a)
     cB = deepcopy(b)
+    for n = 1:a.N
+        layerZParams = a.zCodeParams[n]
+        layerRParams = a.rCodeParams[n]
+        # Crossover depths
+        if a.model[n,1] < b.model[n,1]
+            βa, βb = boundedSBX(a.model[n,1], b.model[n,1], η, layerZParams.min, layerZParams.max)
+            cA.model[n,1] = 0.5*(1+βa)*a.model[n,1] + 0.5 * (1-βa) * b.model[n,1]
+            cB.model[n,1] = 0.5*(1-βb)*a.model[n,1] + 0.5 * (1+βb) * b.model[n,1]
+        end
 
-    cA.model = 0.5 * ((1+β)*a.model + (1-β)*b.model)
-    cB.model = 0.5 * ((1-β)*a.model + (1+β)*b.model)
+        # Crossover resistivities
+        if a.model[n,2] < b.model[n,2]
+            βa, βb = boundedSBX(a.model[n,2], b.model[n,2], η, layerRParams.min, layerRParams.max)
+            cA.model[n,2] = 0.5*(1+βa)*a.model[n,2] + 0.5 * (1-βa) * b.model[n,2]
+            cB.model[n,2] = 0.5*(1-βb)*a.model[n,2] + 0.5 * (1+βb) * b.model[n,2]
+        end
+
+        # Apply significant figures
+        cA.model[n,1] = signif(cA.model[n,1], layerZParams.res)
+        cA.model[n,2] = signif(cA.model[n,2], layerRParams.res)
+        cB.model[n,1] = signif(cB.model[n,1], layerZParams.res)
+        cB.model[n,2] = signif(cB.model[n,2], layerRParams.res)
+    end
 
     # Force first layer to have zero depth
     cA.model[1,1] = 0
     cB.model[1,1] = 0
 
-
-    for n in 1:cA.N
-        cA.model[n,1] = signif(cA.model[n,1], cA.zCodeParams[n].res)
-        cA.model[n,2] = signif(cA.model[n,2], cA.rCodeParams[n].res)
-        cB.model[n,1] = signif(cB.model[n,1], cB.zCodeParams[n].res)
-        cB.model[n,2] = signif(cB.model[n,2], cB.rCodeParams[n].res)
-    end
     cA.model = sortrows(cA.model)
     cB.model = sortrows(cB.model)
 
-    return(cA, cB)
+    return (cA, cB)
+end
+
+# Computes β(u,a) and β(u,b) returning them in a tuple
+# ## Arguments:
+# - `p1` -- First parent value to crossover
+# - `p2` -- Second parent value to crossover
+# - `η`  -- Distribution parameter
+# - `a`  -- Lower bound of search space
+# - `b`  -- Upper bound of search space
+#
+# ## Returns:
+# - A tuple containing β(u,a) and β(u,b) (in that order)
+#
+# ## Notes:
+# Throws an error if a > b or if p1 > p2.
+# Implementation is based on report by Deb, K. and Jain, H. (#2011017)
+function boundedSBX(p1::Real, p2::Real, η::Integer, a::Real, b::Real)
+    if a > b
+        error("boundedSBX: lower bound a was greater than b")
+    end
+
+    if !(p1 < p2)
+        error("boundedSBX: Parent 1 was greater than parent 2")
+    end
+    βa = 1 + (p1 - a) / (p2 - p1)
+    βb = 1 + (b - p2) / (p2 - p1)
+    γa = 1 / (2 * βa^(η+1))
+    γb = 1 / (2 * βb^(η+1))
+
+    βua, βub = 0, 0
+
+    ua = rand()
+    if ua <= 0.5/(1-γa)
+        βua = (2ua*(1-γa))^(1/(η+1))
+    else
+        βua = (1 / (2*(1-ua*(1-γa))))^(1/(η+1))
+    end
+
+    ub = rand()
+    if ub <= 0.5/(1-γb)
+        βub = (2ub*(1-γb))^(1/(η+1))
+    else
+        βub = (1 / (2*(1-ub*(1-γb))))^(1/(η+1))
+    end
+
+    return (βua, βub)
 end
 
 function mutate!(c::Chromosome, Pm::Real)
