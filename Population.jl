@@ -106,7 +106,7 @@ function evolve!(P::Population, maxGen=1000)
         sort!(P.cs, lt=(a,b) -> a.fitness < b.fitness)
         P.generation += 1
 
-        if P.cs[1].fitness <= 0.5
+        if 0.5 <= P.cs[1].fitness <= 1.5
             break
         end
 
