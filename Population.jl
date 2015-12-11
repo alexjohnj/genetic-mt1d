@@ -19,6 +19,7 @@ type Population
             push!(P, createRandomModel(N, zBounds, rBounds))
             calculateFitness!(P[i], data)
         end
+        sort!(P, lt=(a,b) -> a.fitness < b.fitness)
         new(Q, P, data, zBounds, rBounds, 1)
     end
 end
