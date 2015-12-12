@@ -2,17 +2,23 @@ module MT1D
 export calculateResponse, calculateRMSMisfit
 
 """
-MT1D calculates the apparent resistivity and phase for an `N` layer 1D
-resistivity model.
+Description
+===========
 
-## Arguments:
-- `model` -- An `N`×2 matrix with depth to the top of each layer in the 1st
-    column and resistivity in the second.
-- `fs` -- A vector of frequencies to evaluate the model at.
+Forward model the apparent resistivity and phase response for a model.
 
-## Returns:
-- `ρa` -- A vector of apparent surface resistivities computed from the model.
-- `Φ`  -- A vector of phases computed from the model.
+Arguments
+=========
+
+- `model::Matrix`: Matrix representing the model. Each row is a layer. Columns are:
+    1. Depth to top of layer (m)
+    2. Resistivity of layer (Ωm)
+- `fs::Vector`: Frequencies to forward model the response at.
+
+Returns
+=======
+
+- `Tuple{ρ::Vector,Φ::Vector}`: Forward modelled apparent resistivity and phase.
 """
 function calculateResponse(model::Matrix, fs::Vector)
     const μ0 = 4E-7 * π;
@@ -43,16 +49,23 @@ function calculateResponse(model::Matrix, fs::Vector)
 end
 
 """
-rms finds the root mean squared misfit between a set of observations and a
-model while accounting for uncertainty.
+Description
+===========
 
-## Arguments:
-- `obs`   -- A vector f observations.
-- `model` -- A vector of models.
-- `ϵ`     -- A vector of uncertainties.
+Calculate the root mean squared misfit between a set of observations and
+modelled responses.
 
-## Returns:
-- A real number indicating the RMS value.
+Arguments
+=========
+
+- `obs::Vector`: Observation points
+- `model::Vector`: Modelled responses
+- `ϵ::Vector`: Uncertainties for `obs`
+
+Returns
+=======
+
+- `r::Real`: Calculated RMS misfit
 """
 function calculateRMSMisfit(obs::Vector, model::Vector, ϵ::Vector)
     sqrt(sum(((obs - model) ./ ϵ).^2) / (2 * length(obs)))
