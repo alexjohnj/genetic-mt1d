@@ -18,7 +18,7 @@ function testForwardModel(model=[])
     end
 
     println("Forward modelling...")
-    @time ρ, Φ = mt1d(model, fs)
+    @time ρ, Φ = calculateResponse(model, fs)
     println("Done!")
     pRes = plot(x=fs.^-1,
                 y=ρ,

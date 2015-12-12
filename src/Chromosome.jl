@@ -48,10 +48,10 @@ end
 
 function calculateFitness!(c::Chromosome, data::Matrix)
     fs = data[:,1].^-1
-    ρ, Φ = mt1d(c.model, fs)
+    ρ, Φ = calculateResponse(c.model, fs)
 
-    RMSρ = rms(data[:,2], ρ, data[:,4])
-    RMSΦ = rms(data[:,3], Φ, data[:,5])
+    RMSρ = calculateRMSMisfit(data[:,2], ρ, data[:,4])
+    RMSΦ = calculateRMSMisfit(data[:,3], Φ, data[:,5])
 
     c.fitness = sqrt(RMSρ^2 + RMSΦ^2)
 
