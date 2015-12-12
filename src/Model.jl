@@ -131,6 +131,8 @@ function calculateFitness!(c::Model, data::Matrix)
             c.fitness += abs(layerModel[2] - rCodeParams.max) * rPenaltyFactor
         end
     end
+
+    return
 end
 
 
@@ -267,4 +269,6 @@ function mutate!(c::Model, Pm::Real)
             sortrows(c.model)
         end
     end
+
+    return
 end
