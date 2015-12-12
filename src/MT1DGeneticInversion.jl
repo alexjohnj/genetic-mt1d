@@ -3,7 +3,7 @@ include("./MT1D.jl")
 module MT1DGeneticInversion
 using MT1D
 
-export LayerBC, Population, evolve!
+export LayerBC, Inversion, evolve!
 """
 `LayerBC` defines a set of boundary conditions for a layer. One instance
 represents either the resistivity or depth boundaries.
@@ -19,5 +19,6 @@ end
 
 include("./Model.jl")
 include("./Population.jl")
+include("./Inversion.jl")
 
 end
