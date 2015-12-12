@@ -1,11 +1,3 @@
-include("./mt1d.jl")
-using MT1D
-
-type LayerBC
-    min::Integer
-    max::Integer
-end
-
 type Chromosome
     model::Matrix
     N::Integer

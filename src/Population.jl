@@ -1,5 +1,3 @@
-include("./Chromosome.jl")
-
 type Population
     Q::Integer
     cs::Array{Chromosome}

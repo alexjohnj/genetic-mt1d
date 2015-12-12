@@ -1,4 +1,6 @@
-include("../src/Population.jl")
+include("../src/MT1DGA.jl")
+using MT1DGA
+
 function testGASnorcle(size=100, gen=2000)
     inDataFile = "SNO-96-106.data"
     outModelFile = replace(inDataFile, ".data", ".genetic.model")
