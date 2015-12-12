@@ -1,6 +1,6 @@
 type Population
     Q::Integer
-    cs::Array{Chromosome}
+    cs::Array{Model}
     data::Matrix
     zBounds::Array{LayerBC}
     rBounds::Array{LayerBC}
@@ -36,7 +36,7 @@ candidate wins by default.
 - Ps -- Probability of selection
 
 ## Returns:
-A winning `Chromosome`
+A winning `Model`
 """
 function performTournament(P::Population, K::Integer, Ps::Real)
     competitors = rand(P.cs, K)

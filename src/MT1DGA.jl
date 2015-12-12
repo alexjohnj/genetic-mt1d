@@ -9,7 +9,7 @@ type LayerBC
     max::Integer
 end
 
-include("./Chromosome.jl")
+include("./Model.jl")
 include("./Population.jl")
 
 end

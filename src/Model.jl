@@ -1,11 +1,11 @@
-type Chromosome
+type Model
     model::Matrix
     N::Integer
     zCodeParams::Array{LayerBC}
     rCodeParams::Array{LayerBC}
     fitness::Real
 
-    function Chromosome(m::Matrix, z::Array{LayerBC}, r::Array{LayerBC})
+    function Model(m::Matrix, z::Array{LayerBC}, r::Array{LayerBC})
         if (z[1].min != 0 || z[1].max != 0)
             error("Range of depths for first layer must be (0,0)!")
         end
@@ -35,10 +35,10 @@ function createRandomModel(N::Integer, zParams::Array{LayerBC}, rParams::Array{L
         model[n,2] = rand(layerRParams.min:layerRParams.max)
     end
 
-    Chromosome(model, zParams, rParams)
+    Model(model, zParams, rParams)
 end
 
-function calculateFitness!(c::Chromosome, data::Matrix)
+function calculateFitness!(c::Model, data::Matrix)
     fs = data[:,1].^-1
     ρ, Φ = calculateResponse(c.model, fs)
 
@@ -76,7 +76,7 @@ function calculateFitness!(c::Chromosome, data::Matrix)
     end
 end
 
-function crossover(a::Chromosome, b::Chromosome)
+function crossover(a::Model, b::Model)
     const η = 2 # Distribution index
     cA = deepcopy(a)
     cB = deepcopy(b)
@@ -154,7 +154,7 @@ function boundedSBX(p1::Real, p2::Real, η::Integer, a::Real, b::Real)
     return (βua, βub)
 end
 
-function mutate!(c::Chromosome, Pm::Real)
+function mutate!(c::Model, Pm::Real)
     for n in 1:c.N
         # Mutate depth
         if rand() < Pm
