@@ -19,20 +19,22 @@ function sortPopulation!(P::Array{Model})
 end
 
 """
-Select a member of the population using a tournament selection. A
-random number is generated. If it is less than the probability of
-selection, the fittest competitor wins. Otherwise, the fittest is
-discarded and the tournament is carried out between the remaining
-weaker candidates. If no body wins the tournament, the weakest
-candidate wins by default.
+Description
+===========
 
-## Key Word Arguments
-- P  -- Population to select competitors from
-- K  -- Tournament size
-- Ps -- Probability of selection
+Select a member of a population through a tournament selection.
 
-## Returns:
-A winning `Model`
+Arguments
+=========
+
+- `P::Array{Model}`: Population to select a winner from.
+- `K::Integer`: Number of competitors in tournament.
+- `Ps::Real`: Probability of selection. 0 <= Ps <= 1.
+
+Returns
+=======
+
+- `w::Model`: The winning model
 """
 function performTournament(P::Array{Model}, K::Integer, Ps::Real)
     competitors = rand(P, K)
