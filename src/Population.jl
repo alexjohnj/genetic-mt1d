@@ -1,15 +1,21 @@
 """
+Description
+===========
+
 Sort a population in decreasing order of fitness.
 
-# Arguments
+Arguments
+=========
 
 - `P::Array{Model}`: The population to sort.
 
-# Side Effects
+Side Effects
+============
 
 - Mutates the order of `P`.
 
-# Returns
+Returns
+=======
 
 - `nothing`.
 """

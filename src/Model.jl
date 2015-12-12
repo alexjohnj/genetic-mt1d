@@ -1,7 +1,11 @@
 """
+Description
+===========
+
 The `Model` type represents a solution in the genetic algorithm.
 
-# Fields:
+Fields
+======
 
 - `model::Matrix`: The underlying model in matrix form. Each row is a layer with
   depth to the layer's top in the first column and the layer's resistivity in
@@ -31,20 +35,26 @@ type Model
 end
 
 """
+Description
+===========
+
 Create an instance of the `Model` type with a randomly generated model within a
 set of constraints.
 
-# Arguments
+Arguments
+=========
 
 - `N::Integer`: The number of layers to use in the model.
 - `zParams::Array{LayerBC}`: The depth constraints for each layer.
 - `rParams::Array{LayerBC}`: The resistivity constraints for each layer.
 
-# Returns
+Returns
+=======
 
 - `::Model`: An instance of the `Model` type.
 
-# Notes
+Notes
+=====
 
 - **Throws an error** if `length(zParams) != length(rParams)`.
 - **Throws an error** if the first element of `zParams != LayerBC(0,0)`.
@@ -71,10 +81,14 @@ function createRandomModel(N::Integer, zParams::Array{LayerBC}, rParams::Array{L
 end
 
 """
+Description
+===========
+
 Calculate the fitness of a `Model` instance by calculating the RMS misfit
 between the model's forward response and some data.
 
-# Arguments
+Arguments
+=========
 
 - `c::Model`: `Model` Instance to find the fitness of. The instance's `fitness`
   field will be mutated.
@@ -86,12 +100,14 @@ between the model's forward response and some data.
     4. Apparent resistivity uncertainty
     5. Phase uncertainty
 
-# Side Effects
+Side Effects
+============
 
 - Updates the `fitness` field of the instance `c::Model` with the newly
   calculated misfit.
 
-# Returns
+Returns
+=======
 
 - `nothing::Void`
 """
@@ -137,14 +153,19 @@ end
 
 
 """
+Description
+===========
+
 Crossover two parent `Model` instances to produce two children using SBX.
 
-# Arguments
+Arguments
+=========
 
 - `a::Model`: The first parent.
 - `b::Model`: The second parent.
 
-# Returns
+Returns
+=======
 
 - `Tuple{Model,Model}`: The two offsprings of the parents.
 """
@@ -181,9 +202,13 @@ function crossover(a::Model, b::Model)
 end
 
 """
+Description
+===========
+
 Calculate the β values for the bounded SBX of two values.
 
-# Arguments
+Arguments
+=========
 
 - `p1::Real`: First parent value to crossover.
 - `p2::Real`: Second parent value to crossover.
@@ -191,11 +216,13 @@ Calculate the β values for the bounded SBX of two values.
 - `a::Real`: Lower bound of search space.
 - `b::Real`: Upper bound of search space.
 
-# Returns
+Returns
+=======
 
 - `Tuple{Real,Real}`: The calculated values of β(u,a) and β(u,b).
 
-# Notes
+Notes
+=====
 
 - **Throws an error** if `a > b` or if `p1 > p2`.
 - Implementation is based on report by Deb, K. and Jain, H. (#2011017)
@@ -233,20 +260,26 @@ function boundedSBX(p1::Real, p2::Real, η::Integer, a::Real, b::Real)
 end
 
 """
+Description
+===========
+
 Mutate a `Model` instance. For each depth and resistivity value in the model,
 pick a random number. If it is less than the probability of mutation, pick a new
 value within the constraints of the model.
 
-# Arguments
+Arguments
+=========
 
 - `c::Model`: Model to mutate.
 - `Pm::Real`: Probability of mutation. Should be in the range [0,1].
 
-# Side Effects
+Side Effects
+============
 
 - If a mutation occurs, `c`'s `model` field will be altered.
 
-# Returns
+Returns
+=======
 
 - `nothing::Void`
 """

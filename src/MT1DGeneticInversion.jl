@@ -5,10 +5,15 @@ using MT1D
 
 export LayerBC, Inversion, evolve!
 """
+Description
+===========
+
 `LayerBC` defines a set of boundary conditions for a layer. One instance
 represents either the resistivity or depth boundaries.
 
-# Fields
+Fields
+======
+
 - `min::Integer`: Lower boundary for the layer.
 - `max::Integer`: Upper boundary for the layer.
 """
