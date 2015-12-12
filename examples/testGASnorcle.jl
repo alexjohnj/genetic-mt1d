@@ -1,4 +1,4 @@
-include("../Population.jl")
+include("../src/Population.jl")
 function testGASnorcle(size=100, gen=2000)
     inDataFile = "SNO-96-106.data"
     outModelFile = replace(inDataFile, ".data", ".genetic.model")
