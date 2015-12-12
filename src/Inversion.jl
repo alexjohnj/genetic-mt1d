@@ -1,3 +1,38 @@
+"""
+Description
+===========
+
+An instance of `Inversion` holds the current state of an inversion. This
+includes the population, the current generation, the boundaries of the inversion
+and the inversion parameters.
+
+Fields
+======
+
+- `data::Matrix`: The data being inverted. Columns should consist of:
+    1. Period
+    2. Apparent resistivity
+    3. Phase
+    4. Apparent resistivity uncertainty
+    5. Phase uncertainty
+- `popSize::Integer`: The target size of the population.
+- `zBounds::Array{LayerBC}`: Array of boundaries for each layer's depth.
+- `rBounds::Array{LayerBC}`: Array of boundaries for each layer's resistivity.
+- `nE::Integer`: Number of elitist clones to make per generation.
+- `pM::Real`: Probability of mutation. 0 <= Pm <= 1.
+- `pS::Real`: Probability of selection. 0 <= Ps <= 1.
+- `pop::Array{Model}`: Population for the genetic algorithm. Sorted by fitness.
+- `gen::Integer`: Current generation. Starts at 1.
+
+Usage
+=====
+
+- `I = Inversion(data, popSize, zBounds, rBounds)`
+- `I = Inversion(data, popSize, zBounds, rBounds, nE, pM, pS)`
+
+If you don't specify nE, pM and pS, the default values of 5% of the population,
+0.01 and 0.65 will be used.
+"""
 type Inversion
     data::Matrix
     popSize::Integer
@@ -34,6 +69,29 @@ type Inversion
 end
 
 """
+Description
+===========
+
+Evolve an instance of `Inversion` through a specified number of
+generations. This involves carrying out all the steps of the genetic
+algorithm. Evolution will be terminated if the fitness falls within the stopping
+conditions.
+
+Arguments
+=========
+
+- `I::Inversion`: Inversion instance to evolve.
+- `ngen::Integer=100`: Number of generations to advance `I` by.
+
+Side Effects
+============
+
+- Mutates the `pop` and `gen` fields of `I`.
+
+Returns
+=======
+
+- `nothing`
 """
 function evolve!(I::Inversion, ngen=100)
     @printf("Gen: %d\tBest RMS:%.2f\tSize: %d\n", I.gen, I.pop[1].fitness, length(I.pop))
@@ -61,6 +119,26 @@ function evolve!(I::Inversion, ngen=100)
 end
 
 """
+Description
+===========
+
+Create the next generation for an inversion by making elitist clones, selecting
+parents and mating the selections.
+
+Arguments
+=========
+
+- `I::Inversion`: Inversion instance to create the next generation for.
+
+Side Effects
+============
+
+- Mutates the `pop` field of `I`.
+
+Returns
+=======
+
+- `nothing`
 """
 function createNextGeneration!(I::Inversion)
     nextGen = I.pop[1:I.nE]
