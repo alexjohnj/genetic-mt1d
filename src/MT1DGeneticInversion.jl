@@ -1,6 +1,6 @@
 include("./MT1D.jl")
 
-module MT1DGA
+module MT1DGeneticInversion
 using MT1D
 
 export LayerBC, Population, evolve!

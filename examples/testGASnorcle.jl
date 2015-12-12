@@ -1,5 +1,5 @@
-include("../src/MT1DGA.jl")
-using MT1DGA
+include("../src/MT1DGeneticInversion.jl")
+using MT1DGeneticInversion
 
 function testGASnorcle(size=100, gen=2000)
     inDataFile = "SNO-96-106.data"
