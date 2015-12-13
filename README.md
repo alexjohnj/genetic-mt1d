@@ -14,16 +14,14 @@ where they inverted 1D data to find the electric Moho.
 
 genetic-mt1d is written in [Julia][julia-lang] and tested against the latest
 stable build (0.4, at the time of writing), so you'll need to install Julia to
-get started. Right now, genetic-mt1d isn't available as a package (still need to
-read the docs on that one), so you'll need to clone the git repository and add
-the `src` directory to your `LOAD_PATH`. From the shell, a script or your
-`~/juliarc.jl` file, you'd do something like this:
+get started. To install genetic-mt1d, run the following from a Julia REPL:
 
 ``` julia
-push!(LOAD_PATH, "../relative-path/to/src")
+Pkg.clone("https://github.com/alexjohnj/genetic-mt1d.git", "MT1DGeneticInversion")
 ```
 
-Not ideal I know. I'll turn this into a package at some point.
+Because I wasn't thinking when I named the repository, you have to specify the
+package's name as well as its git address.
 
 [julia-lang]: http://julialang.org
 
