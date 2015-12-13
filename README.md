@@ -1,100 +1,158 @@
-# genetic-mt1d
+# Overview
 
-This is an inversion program for 1D magnetotelluric (MT) data that uses a
-real-valued genetic algorithm. It was written for a report for GEOPH526 at the
-University of Alberta. It works and has been tested on some synthetic data and
-real world data included in the examples folder.
+genetic-mt1d is a 1D magnetotelluric (MT) inversion program that uses a real
+valued genetic algorithm to find the best fitting inverse model for a data set
+of apparent resistivity and phase responses. It was written as part of a project
+for the GEOPH524 class at the University of Alberta. Although I can't make any
+guarantees about the correctness of the results, I've had success using it to
+reproduce the results of a paper by [Jones & Ferguson (2001)][electric-moho]
+where they inverted 1D data to find the electric Moho.
 
-Currently, documentation for the code is a mixed bag. Some functions are
-documented and some aren't. The `testGASnorcle` script in the examples folder
-should give you an idea of how to get started with the program, but I'll add
-some documentation in the future. At the moment, to change the mutation, elitism
-and selection parameters for the algorithm, you need to edit `Chromosome.jl` and
-`Population.jl`. In the future, I'm going to make these more easily
-configurable.
+[electric-moho]: http://www.nature.com/nature/journal/v409/n6818/abs/409331a0.html
 
-## The Genetic Algorithm
+# Installation
 
-For the inversion, models are defined in N&times;2 matrices where N is the
-number layers. The first column contains the depth to the top of each layer and
-the second column contains the layer's resistivity. The GA initialises a
-population of random models within a set of provided constraints for depth and
-resistivity. These constraints can be global or set on a per-layer basis. The
-fitness function the GA is trying to minimise is the root mean squared (RMS)
-misfit between the models and the data being inverted. The GA evolves the
-population using four steps:
+genetic-mt1d is written in [Julia][julia-lang] and tested against the latest
+stable build (0.4, at the time of writing), so you'll need to install Julia to
+get started. Right now, genetic-mt1d isn't available as a package (still need to
+read the docs on that one), so you'll need to clone the git repository and add
+the `src` directory to your `LOAD_PATH`. From the shell, a script or your
+`~/juliarc.jl` file, you'd do something like this:
 
-1. Selects parents for crossover using a tournament selection with two
-   competitors.
-2. Creates elitist clones of the best models and puts them into the next
-   generation.
-3. Breeds the selected parents using a simulated binary crossover (SBX) to fill
-   the next generation to the target size.
-4. Mutates the next generation by going through each layer in each model and
-   picking a random number. If the number is less than the probability of
-   mutation, a new depth or resistivity is picked at random within the initial
-   constraints of the GA.
+``` julia
+push!(LOAD_PATH, "../relative-path/to/src")
+```
 
-This continues until a certain number of generations is reached or until the
-root mean squared misfit between the best model and the data being inverted is
-in the range of 0.5 &leq; R &leq; 1.5.
-
-By default, the following parameters are used in the different stages of the GA:
-
-- Probability of selection (P<sub>s</sub>) = 0.6
-- Probability of mutation (P<sub>m</sub>) = 0.01
-- Elitism rate = 10% of the population
-- Distribution parameter (η) = 2
-
-As mentioned, to change them you need to modify the `Population.jl` and
-`Chromosome.jl` source files.
-
-## Usage
-
-Running the program requires [Julia][julia-lang]. As previously mentioned, the
-`testGASnorlce` script should be enough to get you up and running but basic
-usage would go something like this:
+Not ideal I know. I'll turn this into a package at some point.
 
 [julia-lang]: http://julialang.org
 
+# Usage
+
+Let's use a little example to explain things. Say you have some data in a CSV
+file that consists of period, apparent resistivity, phase and their associated
+errors. You want to invert a 3 layer model from this data. Load this data into
+Julia using your preferred method (maybe `readdlm`?)  and wrangle it into a
+matrix with 5 columns. The columns should be
+
+1. Period (seconds)
+2. Apparent resistivity (Ohm-metres)
+3. Phase (degrees)
+4. Apparent resistivity uncertainty (Ohm-metres)
+5. Phase uncertainty (degrees)
+
+This is your `data` matrix. This is what we're going to invert. Now, in a Julia
+script, load genetic-mt1d:
+
+``` julia
+using MT1DGeneticInversion
+```
+
+The first thing to do is define some constraints for the inversion. We'll want
+to place an upper and lower bound on resistivity and the depth to each
+layer. Constraints are represented by the `LayerBC` type, a simple struct with a
+`min` and `max` field. Each `LayerBC` instance represents the constraints for
+one parameter of one layer so we'll need two 3 element arrays of
+`LayerBC`s. Here, we'll set the same constraints for each layer:
+
+``` julia
+zBounds = [LayerBC(0, 0) LayerBC(0, 1000) LayerBC(0, 1000)] # Depth
+rBounds = fill(LayerBC(1, 100), (3, 1)) # Resistivity
+```
+
+Note that for the depth constraints, the first layer is constrained to 0 m. This
+is a requirement and will produce an error if it's constrained to anything
+else. The depth to the other layers is constrained to 0--1000 m. Each layer's
+resistivity is constrained to 1--100 Ωm.
+
+Next we need to create an instance of the `Inversion` type using these
+constraints. We'll create an `Inversion` with a population size of 100 for the
+genetic algorithm.
+
+``` julia
+I = Inversion(data, 100, zBounds, rBounds)
+```
+
+This creates an `Inversion` instance initialised with a population of 100 random
+models, generated within the constraints of `zBounds` and `rBounds`. The number
+of layers in the models is derived from the number of constraints
+provided. Using this constructor, the following parameters take their default
+values:
+
+- Number of elitist clones = 5% of the population size
+- Probability of mutation = 0.01
+- Probability of selection = 0.65
+- Tournament size = 2
+
+If you want to change these, you can either modify the fields of `I` directly
+(see built in documentation) or use the more detailed constructor:
+
+``` julia
+I = Inversion(data, 100, zBounds, rBounds, nElitist, probMut, probSel, tournSize)
+```
+
+Once the `Inversion` instance is created, we can evolve it using:
+
+``` julia
+evolve!(I, 2000)
+```
+
+This evolves the population of `I` through 2000 generations, changing the state
+of `I` in the process. To get the best model after evolution, use the first
+element of `I`'s `pop` field:
+
 ```julia
-include("./Population.jl")
-data = readdlm("./mt.data")
-
-N = 4 # Number of layers to invert
-# Constraints for the depth to the top of each layer. Use one LayerBC type for
-# each layer. The first layer must be fixed at 0m.
-zBounds = [Layer(BC(0,0)) fill(LayerBC(1,100_000), (N-1,1))]
-rBounds = fill(LayerBC(1,50_000), (N,1)) # Same but for resistivity
-
-# Create a population of 100 random models. The models are generated within the
-# provided boundaries and are sorted by fitness.
-pop = Population(100, data, zBounds, rBounds)
-
-# Evolve the population through 1000 generations, mutating the original pop
-# type.
-evolve!(pop, 1000)
-writedlm("./genetic.model", pop.cs[1].model) # Save the best model to a text file.
+bestModel = I.pop[1]
 ```
 
-The data you want to invert needs to be in a delimitered text file with the
-following structure:
+The `pop` field is an array of `Model` instances sorted from fittest to
+weakest. `Model` instances have two important field. `Model.model` (confusing,
+sorry) accesses the matrix representation of the model where each row is a layer
+and the first column contains the depth to that layer while the second column
+contains its resistivity. `Model.fitness` gives you the root mean squared (RMS)
+misfit between the model's forward modelled response and the response in `data`.
 
-```
-Period (s), Apparent Res (Ωm), Phase (°), Res Uncertainty, Phase Uncertainty
-```
+That is a (somewhat) long winded (but complete!, kinda) overview of using
+genetic-mt1d. Note that there is an example script in
+`examples/testGASnorcle.jl` that inverts some real world data to find the depth
+to the electric Moho. You can probably use that as a starting point. Also, all
+the code's documented and it integrates with Julia's help system nicely. Try
+typing `?Inversion` at the REPL to get some more info on the `Inversion` type,
+for example.
 
-You pass it to the `Population` function as a matrix with the same order of
-columns.
+# How It Works
 
-## The Example
+The inversion makes use of a real valued genetic algorithm. Models are
+represented as Nx2 matrices (N = number of layers) and their apparent
+resistivity and phase response is forward modelled using
+[Wait (1954)][wait-recursion]. The genetic algorithm tries to minimise the RMS
+misfit between the models and the provided data until it is between 0.5 and 1.5.
 
-The example script `testGASnorcle` inverts a 4 layer model from the
-`SNO-96-106.data` file. This is data from the SNORCLE project, taken over the
-Slave Craton in Canada in 1996. If you run the example script, you should
-recover a nice four layer model after a few thousand generations. The recovered
-model should match an inverted model from the same data set by
-[Jones & Ferguson (2001)][jones-ferg]. Notably, there should be a drop in
-resistivity around 36 km which corresponds to the Moho discontinuity.
+[wait-recursion]: http://library.seg.org/doi/abs/10.1190/1.1437994
 
-[jones-ferg]: http://www.nature.com/nature/journal/v409/n6818/abs/409331a0.html
+Selection is implemented as a tournament selection with a customisable
+tournament size and selection probability. Crossover uses a simulated binary
+crossover (SBX) to combine two parents and produce two offsprings. In addition
+to the children, a certain number of elitist clones are copied over to the next
+generation. Mutation is applied per parameter in each model. For each parameter,
+we generate a random number and if it's less than the mutation chance, we pick a
+new value for the parameter within the layer's constraints. Because mutation is
+applied per parameter, the effect of the mutation rate will depend on the number
+of layers you're trying to invert in addition to the population size.
+
+
+# Performance
+
+Be warned, this isn't written with performance in mind. Nonetheless, the forward
+modelling calculation is relatively simple and for smallish populations
+(~100--200), performance is acceptable when running on a moderately powerful
+laptop (30s--60s for the example script). The genetic algorithm doesn't make use
+of multiple cores but one day I'd like to try and make it parallel. First I'll
+need to read the docs on parallel computing in Julia though.
+
+The forward modelling code is a straight up port of a MATLAB implementation I'd
+written that was highly vectorised. I'm aware that Julia's performance is worse
+with vectorised code so one day I'll explore devectorising the forward modelling
+code. Some initial benchmarks forward modelling a 3 layer model across 100,000
+frequencies showed a large memory allocation, so there might be some performance
+to gain from devectorising.
