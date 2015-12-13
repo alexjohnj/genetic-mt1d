@@ -41,8 +41,17 @@ Returns
 =======
 
 - `w::Model`: The winning model
+
+Notes
+=====
+
+- **Throws an error** if `!(1 <= K <= length(P))`.
 """
 function performTournament(P::Array{Model}, K::Integer, Ps::Real)
+    if !(1 <= K <= length(P))
+        error("Tournament size can not be less than 1 or greater than the population size")
+    end
+
     competitors = rand(P, K)
     sortPopulation!(competitors)
 

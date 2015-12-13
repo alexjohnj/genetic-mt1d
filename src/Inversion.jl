@@ -21,6 +21,7 @@ Fields
 - `nE::Integer`: Number of elitist clones to make per generation.
 - `pM::Real`: Probability of mutation. 0 <= Pm <= 1.
 - `pS::Real`: Probability of selection. 0 <= Ps <= 1.
+- `tSize::Integer`: Number of competitors in tournament selection
 - `pop::Array{Model}`: Population for the genetic algorithm. Sorted by fitness.
 - `gen::Integer`: Current generation. Starts at 1.
 
@@ -28,10 +29,16 @@ Usage
 =====
 
 - `I = Inversion(data, popSize, zBounds, rBounds)`
-- `I = Inversion(data, popSize, zBounds, rBounds, nE, pM, pS)`
+- `I = Inversion(data, popSize, zBounds, rBounds, nE, pM, pS, tSize)`
 
-If you don't specify nE, pM and pS, the default values of 5% of the population,
-0.01 and 0.65 will be used.
+
+Notes
+=====
+
+- If `nE` is unspecified, it defaults to 5% of the population.
+- If `pM` is unspecified, it defaults to 0.01.
+- If `pS` is unspecified, it defaults to 0.65.
+- If `tSize` is unspecified, it defaults to 2.
 """
 type Inversion
     data::Matrix
@@ -42,17 +49,19 @@ type Inversion
     nE::Integer
     pM::Real
     pS::Real
+    tSize::Integer
 
     pop::Array{Model}
-    gen::Integer
+    gen::Int
 
     function Inversion(data::Matrix, popSize::Integer, zBounds::Array{LayerBC},
                        rBounds::Array{LayerBC})
-        Inversion(data, popSize, zBounds, rBounds, ceil(Integer, 0.05*popSize), 0.01, 0.65)
+        Inversion(data, popSize, zBounds, rBounds, ceil(Integer, 0.05*popSize), 0.01, 0.65, 2)
     end
 
     function Inversion(data::Matrix, popSize::Integer, zBounds::Array{LayerBC},
-                       rBounds::Array{LayerBC}, nE::Integer, pM::Real, pS::Real)
+                       rBounds::Array{LayerBC}, nE::Integer, pM::Real, pS::Real,
+                       tSize::Int)
         if length(zBounds) != length(rBounds)
             error("Length of zBounds != length of rBounds")
         end
@@ -64,7 +73,7 @@ type Inversion
             calculateFitness!(pop[i], data)
         end
         sortPopulation!(pop)
-        new(data, popSize, zBounds, rBounds, nE, pM, pS, pop, 1)
+        new(data, popSize, zBounds, rBounds, nE, pM, pS, tSize, pop, 1)
     end
 end
 
@@ -144,8 +153,8 @@ function createNextGeneration!(I::Inversion)
 
     # Create new children to fill the next generation
     while length(nextGen) < I.popSize
-        parentA = performTournament(I.pop, 2, I.pS)
-        parentB = performTournament(I.pop, 2, I.pS)
+        parentA = performTournament(I.pop, I.tSize, I.pS)
+        parentB = performTournament(I.pop, I.tSize, I.pS)
 
         childA, childB = crossover(parentA, parentB)
         calculateFitness!(childA, I.data)
