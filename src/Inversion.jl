@@ -100,7 +100,6 @@ function evolve!(I::Inversion, ngen=100)
 
         for idx in 1:I.popSize
             mutate!(I.pop[idx], I.pM)
-            # TODO: Only recalculate fitness if mutation occurs
             calculateFitness!(I.pop[idx], I.data)
         end
 
@@ -149,6 +148,8 @@ function createNextGeneration!(I::Inversion)
         parentB = performTournament(I.pop, 2, I.pS)
 
         childA, childB = crossover(parentA, parentB)
+        calculateFitness!(childA, I.data)
+        calculateFitness!(childB, I.data)
         push!(nextGen, childA, childB)
     end
 

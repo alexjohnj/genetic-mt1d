@@ -13,7 +13,8 @@ Fields
 - `N::Integer`: The number of layers in the model.
 - `zCodeParams::Array{LayerBC}`: The depth constraints for each layer.
 - `rCodeParams::Array{LayerBC}`: The resistivity constraints for each layer.
-- `fitness::Real`: The fitness of the model in the genetic algorithm.
+- `fitness::Real`: The fitness of the model in the genetic algorithm. A -ve
+  fitness indicates the fitness needs to be recalculated.
 """
 type Model
     model::Matrix
@@ -30,7 +31,7 @@ type Model
             error("Dimensions of zParams or rParams does not match number of layers")
         end
 
-        new(m, size(m)[1], z, r, NaN)
+        new(m, size(m)[1], z, r, -1)
     end
 end
 
@@ -112,6 +113,11 @@ Returns
 - `nothing::Void`
 """
 function calculateFitness!(c::Model, data::Matrix)
+    if c.fitness >= 0
+        # Fitness is already calculated
+        return
+    end
+
     fs = data[:,1].^-1
     ρ, Φ = calculateResponse(c.model, fs)
 
@@ -168,11 +174,22 @@ Returns
 =======
 
 - `Tuple{Model,Model}`: The two offsprings of the parents.
+
+Notes
+=====
+
+- The offsprings' fitness fields will not be initialised.
 """
 function crossover(a::Model, b::Model)
     const η = 2 # Distribution index
+
     cA = deepcopy(a)
     cB = deepcopy(b)
+
+    # Void the RMS calculations for the children
+    cA.fitness = -1
+    cB.fitness = -1
+
     for n = 1:a.N
         layerZParams = a.zCodeParams[n]
         layerRParams = a.rCodeParams[n]
@@ -292,6 +309,7 @@ function mutate!(c::Model, Pm::Real)
                 zParams = c.zCodeParams[n]
                 c.model[n,1] = rand(zParams.min:zParams.max)
                 sortrows(c.model)
+                c.fitness = -1
             end
         end
 
@@ -300,6 +318,7 @@ function mutate!(c::Model, Pm::Real)
             rParams = c.rCodeParams[n]
             c.model[n,2] = rand(rParams.min:rParams.max)
             sortrows(c.model)
+            c.fitness = -1
         end
     end
 
