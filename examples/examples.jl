@@ -1,4 +1,5 @@
 push!(LOAD_PATH, "../src")
+using MT1DGeneticInversion
 using MT1D
 using Gadfly
 
@@ -38,4 +39,40 @@ function testForwardModel(model=[])
                   Scale.y_continuous(minvalue=0,maxvalue=90))
 
     draw(SVG("forward-modelled-response.svg", 600px, 600px), vstack(pRes, pPhase))
+end
+
+"""
+Invert the data in the file ./SNO-96-106.data using the default inversion
+parameters. This is data collected over the northern Canadian shield as part of
+Lithoprobes's SNORCLE project. The data is the average of the TE and TM
+measurements which were similar and so the structure is one-dimensional. The
+inversion uses 4 layers and should produce a result with a drop in resistivity
+at ~35 km, corresponding to the Moho discontinuity. See "The Electric Moho,
+Jones & Ferguson (2001)" for a detailed analysis of this data set.
+
+Arguments
+=========
+
+- `popsize::Integer`: Population size for the inversion
+- `ngen::Integer`: Number of generations for inversion
+
+Returns
+=======
+
+Nothing
+"""
+function testGASnorcle(popsize=150, ngen=3000)
+    inDataFile = "./SNO-96-106.data"
+    outDataFile = "./SNO-96-106.genetic.model"
+    data = readdlm(inDataFile)
+
+    nLayers = 4
+    zBounds = [LayerBC(0, 0);
+               fill(LayerBC(0, 100_000), (nLayers-1, 1))]
+    rBounds = fill(LayerBC(0, 50_000), (nLayers, 1))
+
+    I = Inversion(data, popsize, zBounds, rBounds)
+    evolve!(I, ngen)
+    print("Best model:\n$(I.pop[1].model)\n")
+    return
 end

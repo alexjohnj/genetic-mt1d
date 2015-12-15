@@ -112,8 +112,8 @@ contains its resistivity. `Model.fitness` gives you the root mean squared (RMS)
 misfit between the model's forward modelled response and the response in `data`.
 
 That is a (somewhat) long winded (but complete!, kinda) overview of using
-genetic-mt1d. Note that there is an example script in
-`examples/testGASnorcle.jl` that inverts some real world data to find the depth
+genetic-mt1d. Note that there is an example function in
+`examples/examples.jl` that inverts some real world data to find the depth
 to the electric Moho. You can probably use that as a starting point. Also, all
 the code's documented and it integrates with Julia's help system nicely. Try
 typing `?Inversion` at the REPL to get some more info on the `Inversion` type,
