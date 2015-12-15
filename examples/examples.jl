@@ -81,7 +81,7 @@ function testGASnorcle(popsize=150, ngen=3000)
     rBounds = fill(LayerBC(0, 50_000), (nLayers, 1))
 
     I = Inversion(data, popsize, zBounds, rBounds)
-    evolve!(I, ngen)
+    evolve!(I, ngen, verbose=true)
     print("Best model:\n$(I.pop[1].model)\n")
     p = plotResponseDataCompare(data, I.pop[1].model)
     draw(SVG("inversion-results.svg", 800px, 800px), p)

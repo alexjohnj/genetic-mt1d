@@ -95,6 +95,7 @@ Arguments
 
 - `I::Inversion`: Inversion instance to evolve.
 - `ngen::Integer=100`: Number of generations to advance `I` by.
+- `verbose::Bool=false`: Print the best RMS misfit every 100 generations.
 
 Side Effects
 ============
@@ -106,8 +107,10 @@ Returns
 
 - `nothing`
 """
-function evolve!(I::Inversion, ngen=100)
-    @printf("Gen: %d\tBest RMS:%.2f\tSize: %d\n", I.gen, I.pop[1].fitness, length(I.pop))
+function evolve!(I::Inversion, ngen=100; verbose=false)
+    if verbose
+        @printf("Gen: %d\tBest RMS:%.2f\tSize: %d\n", I.gen, I.pop[1].fitness, length(I.pop))
+    end
     for i in 1:ngen
         createNextGeneration!(I)
 
@@ -123,7 +126,7 @@ function evolve!(I::Inversion, ngen=100)
             break
         end
 
-        if I.gen % 100 == 0
+        if verbose && I.gen % 100 == 0
             @printf("Gen: %d\tBest RMS:%.2f\tSize: %d\n", I.gen, I.pop[1].fitness, length(I.pop))
         end
     end
