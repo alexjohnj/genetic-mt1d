@@ -180,8 +180,10 @@ Notes
 
 - The offsprings' fitness fields will not be initialised.
 """
-function crossover(a::Model, b::Model)
-    const η = 2 # Distribution index
+function crossover(a::Model, b::Model, η::Integer)
+    if η < 1
+        error("Distribution parameter (η) must be a non-negative integer")
+    end
 
     cA = deepcopy(a)
     cB = deepcopy(b)

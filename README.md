@@ -81,12 +81,13 @@ values:
 - Probability of mutation = 0.01
 - Probability of selection = 0.65
 - Tournament size = 2
+- SBX Distribution index (η) = 2
 
 If you want to change these, you can either modify the fields of `I` directly
 (see built in documentation) or use the more detailed constructor:
 
 ``` julia
-I = Inversion(data, 100, zBounds, rBounds, nElitist, probMut, probSel, tournSize)
+I = Inversion(data, 100, zBounds, rBounds, nElitist, probMut, probSel, tournSize, η)
 ```
 
 Once the `Inversion` instance is created, we can evolve it using:
