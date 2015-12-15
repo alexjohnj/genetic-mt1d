@@ -25,7 +25,7 @@ function testForwardModel(model=[])
                 y=ρ,
                 Geom.line,
                 Guide.xlabel("Period (S)"),
-                Guide.ylabel("Apparent Res (Ωm)"),
+                Guide.ylabel("ρa (Ωm)"),
                 Guide.title("Apparent Resistivity"),
                 Scale.x_log10,
                 Scale.y_log10)
@@ -33,12 +33,21 @@ function testForwardModel(model=[])
                   y=Φ,
                   Geom.line,
                   Guide.xlabel("Period (S)"),
-                  Guide.ylabel("Phase (°)"),
-                  Guide.title("Phase (°)"),
+                  Guide.ylabel("Φ (°)"),
+                  Guide.title("Phase"),
                   Scale.x_log10,
                   Scale.y_continuous(minvalue=0,maxvalue=90))
+    pModel = plot(y=[model[:,2]; model[end,2]],
+                  x=[model[:,1] / 1000; model[end,1] / 1000 + 0.5],
+                  Stat.step(direction=:hv),
+                  Geom.line,
+                  Guide.ylabel("Resistivity (Ωm)"),
+                  Guide.xlabel("Depth (km)"),
+                  Guide.title("Model"),
+                  Scale.y_log10)
 
-    draw(SVG("forward-modelled-response.svg", 600px, 600px), vstack(pRes, pPhase))
+    draw(SVG("forward-modelled-response.svg", 800px, 800px), hstack(vstack(pRes, pPhase), pModel))
+    return
 end
 
 """
