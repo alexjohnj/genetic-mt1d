@@ -83,5 +83,68 @@ function testGASnorcle(popsize=150, ngen=3000)
     I = Inversion(data, popsize, zBounds, rBounds)
     evolve!(I, ngen)
     print("Best model:\n$(I.pop[1].model)\n")
+    p = plotResponseDataCompare(data, I.pop[1].model)
+    draw(SVG("inversion-results.svg", 800px, 800px), p)
     return
+end
+
+function plotResponseDataCompare(data::Matrix, model::Matrix)
+    # Calculate responses
+    ρ, Φ = calculateResponse(model, data[:,1].^-1)
+
+    resMin = data[:,2] - data[:,4]
+    resMax = data[:,2] + data[:,4]
+    dataResLayer = layer(x=data[:,1],
+                         y=data[:,2],
+                         ymin=resMin,
+                         ymax=resMax,
+                         Geom.point,
+                         Geom.errorbar)
+    phaseMin = data[:,3] - data[:,5]
+    phaseMax = data[:,3] + data[:,5]
+    dataPhaseLayer = layer(x=data[:,1],
+                           y=data[:,3],
+                           ymin=phaseMin,
+                           ymax=phaseMax,
+                           Geom.point,
+                           Geom.errorbar)
+
+
+    modelTheme = Theme(default_color=colorant"red")
+    modelResLayer = layer(x=data[:,1],
+                          y=ρ,
+                          Geom.line,
+                          modelTheme)
+    modelPhaseLayer = layer(x=data[:,1],
+                            y=Φ,
+                            Geom.line,
+                            modelTheme)
+
+    resPlot = plot(dataResLayer,
+                   modelResLayer,
+                   Guide.xlabel("Period (S)"),
+                   Guide.ylabel("ρa (Ωm)"),
+                   Guide.title("Apparent Resistivity"),
+                   Scale.x_log10,
+                   Scale.y_log10)
+    phasePlot = plot(dataPhaseLayer,
+                     modelPhaseLayer,
+                     Guide.xlabel("Period (S)"),
+                     Guide.ylabel("Φ (°)"),
+                     Guide.title("Phase"),
+                     Scale.x_log10,
+                     Scale.y_continuous(minvalue=0, maxvalue=90))
+
+    modelPlot = plot(y=[model[:,2]; model[end,2]],
+                     x=[model[:,1] / 1000; model[end,1] / 1000 + 1],
+                     Stat.step(direction=:hv),
+                     Geom.line,
+                     Guide.ylabel("Resistivity (Ωm)"),
+                     Guide.xlabel("Depth (km)"),
+                     Guide.title("Model"),
+                     Scale.y_log10,
+                     modelTheme,
+                     Guide.manual_color_key("Legend", ["Data", "Model"], ["deepskyblue", "red"]))
+
+    return hstack(vstack(resPlot, phasePlot), modelPlot)
 end
