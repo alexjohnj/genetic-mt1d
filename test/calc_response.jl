@@ -1,6 +1,6 @@
 """
 Tests the forward modelling function `calculate_response` against a range of
-models. For model information, see "./test-models/descriptions.md". A comparison
+models. For model information, see "./test-models/README.md". A comparison
 of the expected output and calculated output for each model is plotted and saved
 into "./test-models/generated-plots".
 """
