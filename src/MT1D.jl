@@ -1,5 +1,5 @@
 module MT1D
-export calculateResponse, calculateRMSMisfit
+export calc_response, calc_rms
 
 """
 Description
@@ -20,7 +20,7 @@ Returns
 
 - `Tuple{ρ::Vector,Φ::Vector}`: Forward modelled apparent resistivity and phase.
 """
-function calculateResponse(model::Matrix, fs::Vector)
+function calc_response(model::Matrix, fs::Vector)
     const μ0 = 4E-7 * π;
 
     zs = model[:,1];
@@ -67,7 +67,7 @@ Returns
 
 - `r::Real`: Calculated RMS misfit
 """
-function calculateRMSMisfit(obs::Vector, model::Vector, ϵ::Vector)
+function calc_rms(obs::Vector, model::Vector, ϵ::Vector)
     sqrt(sum(((obs - model) ./ ϵ).^2) / (2 * length(obs)))
 end
 end

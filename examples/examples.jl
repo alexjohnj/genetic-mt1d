@@ -19,7 +19,7 @@ function testForwardModel(model=[])
     end
 
     println("Forward modelling...")
-    @time ρ, Φ = calculateResponse(model, fs)
+    @time ρ, Φ = calc_response(model, fs)
     println("Done!")
     pRes = plot(x=fs.^-1,
                 y=ρ,
@@ -90,7 +90,7 @@ end
 
 function plotResponseDataCompare(data::Matrix, model::Matrix)
     # Calculate responses
-    ρ, Φ = calculateResponse(model, data[:,1].^-1)
+    ρ, Φ = calc_response(model, data[:,1].^-1)
 
     resMin = data[:,2] - data[:,4]
     resMax = data[:,2] + data[:,4]

@@ -119,10 +119,10 @@ function calculateFitness!(c::Model, data::Matrix)
     end
 
     fs = data[:,1].^-1
-    ρ, Φ = calculateResponse(c.model, fs)
+    ρ, Φ = calc_response(c.model, fs)
 
-    RMSρ = calculateRMSMisfit(data[:,2], ρ, data[:,4])
-    RMSΦ = calculateRMSMisfit(data[:,3], Φ, data[:,5])
+    RMSρ = calc_rms(data[:,2], ρ, data[:,4])
+    RMSΦ = calc_rms(data[:,3], Φ, data[:,5])
 
     c.fitness = sqrt(RMSρ^2 + RMSΦ^2)
 
