@@ -76,7 +76,7 @@ type Inversion
             pop[i] = rand_model(nLayers, depth_lims, res_lims)
             calcfitness!(pop[i], data)
         end
-        sortPopulation!(pop)
+        sortpop!(pop)
         new(data, popsize, depth_lims, res_lims, nelitists, pmutation, pselection, tourn_size, η, pop, 1)
     end
 end
@@ -119,7 +119,7 @@ function evolve!(I::Inversion, ngen=100; verbose=false)
             calcfitness!(I.pop[idx], I.data)
         end
 
-        sortPopulation!(I.pop)
+        sortpop!(I.pop)
         I.gen += 1
 
         if 0.5 <= I.pop[1].fitness <= 1.5
@@ -160,8 +160,8 @@ function make_new_generation!(I::Inversion)
 
     # Create new children to fill the next generation
     while length(nextgen) < I.popsize
-        p1 = performTournament(I.pop, I.tourn_size, I.pselection)
-        p2 = performTournament(I.pop, I.tourn_size, I.pselection)
+        p1 = select_with_tournament(I.pop, I.tourn_size, I.pselection)
+        p2 = select_with_tournament(I.pop, I.tourn_size, I.pselection)
 
         childA, childB = crossover(p1, p2, I.η)
         calcfitness!(childA, I.data)

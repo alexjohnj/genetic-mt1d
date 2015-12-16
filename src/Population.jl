@@ -19,7 +19,7 @@ Returns
 
 - `nothing`.
 """
-function sortPopulation!(P::Array{Model})
+function sortpop!(P::Array{Model})
     sort!(P, lt=(a,b) -> a.fitness < b.fitness)
     return
 end
@@ -47,17 +47,17 @@ Notes
 
 - **Throws an error** if `!(1 <= K <= length(P))`.
 """
-function performTournament(P::Array{Model}, K::Integer, Ps::Real)
+function select_with_tournament(P::Array{Model}, K::Integer, Ps::Real)
     if !(1 <= K <= length(P))
         error("Tournament size can not be less than 1 or greater than the population size")
     end
 
     competitors = rand(P, K)
-    sortPopulation!(competitors)
+    sortpop!(competitors)
 
-    tournamentResult = rand()
+    result = rand()
     for k in 0:K-2
-        if tournamentResult <= Ps*(1-Ps)^k
+        if result <= Ps*(1-Ps)^k
             return competitors[1]
         else
             competitors = competitors[2:end]
