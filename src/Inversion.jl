@@ -73,8 +73,8 @@ type Inversion
         nLayers = length(zBounds)
         pop = vec(Array{Model}(popSize,1))
         for i in 1:popSize
-            pop[i] = createRandomModel(nLayers, zBounds, rBounds)
-            calculateFitness!(pop[i], data)
+            pop[i] = rand_model(nLayers, zBounds, rBounds)
+            calcfitness!(pop[i], data)
         end
         sortPopulation!(pop)
         new(data, popSize, zBounds, rBounds, nE, pM, pS, tSize, η, pop, 1)
@@ -116,7 +116,7 @@ function evolve!(I::Inversion, ngen=100; verbose=false)
 
         for idx in 1:I.popSize
             mutate!(I.pop[idx], I.pM)
-            calculateFitness!(I.pop[idx], I.data)
+            calcfitness!(I.pop[idx], I.data)
         end
 
         sortPopulation!(I.pop)
@@ -164,8 +164,8 @@ function createNextGeneration!(I::Inversion)
         parentB = performTournament(I.pop, I.tSize, I.pS)
 
         childA, childB = crossover(parentA, parentB, I.η)
-        calculateFitness!(childA, I.data)
-        calculateFitness!(childB, I.data)
+        calcfitness!(childA, I.data)
+        calcfitness!(childB, I.data)
         push!(nextGen, childA, childB)
     end
 
