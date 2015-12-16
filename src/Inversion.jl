@@ -15,13 +15,13 @@ Fields
     3. Phase
     4. Apparent resistivity uncertainty
     5. Phase uncertainty
-- `popSize::Integer`: The target size of the population.
-- `zBounds::Array{LayerBC}`: Array of boundaries for each layer's depth.
-- `rBounds::Array{LayerBC}`: Array of boundaries for each layer's resistivity.
-- `nE::Integer`: Number of elitist clones to make per generation.
-- `pM::Real`: Probability of mutation. 0 <= Pm <= 1.
-- `pS::Real`: Probability of selection. 0 <= Ps <= 1.
-- `tSize::Integer`: Number of competitors in tournament selection
+- `popsize::Integer`: The target size of the population.
+- `depth_lims::Array{LayerBC}`: Array of boundaries for each layer's depth.
+- `res_lims::Array{LayerBC}`: Array of boundaries for each layer's resistivity.
+- `nelitists::Integer`: Number of elitist clones to make per generation.
+- `pmutation::Real`: Probability of mutation. 0 <= Pm <= 1.
+- `pselection::Real`: Probability of selection. 0 <= Ps <= 1.
+- `tourn_size::Integer`: Number of competitors in tournament selection
 - `η::Integer`: Distribution index for SBX. Must be non-negative.
 - `pop::Array{Model}`: Population for the genetic algorithm. Sorted by fitness.
 - `gen::Integer`: Current generation. Starts at 1.
@@ -29,55 +29,55 @@ Fields
 Usage
 =====
 
-- `I = Inversion(data, popSize, zBounds, rBounds)`
-- `I = Inversion(data, popSize, zBounds, rBounds, nE, pM, pS, tSize, η)`
+- `I = Inversion(data, popsize, depth_lims, res_lims)`
+- `I = Inversion(data, popsize, depth_lims, res_lims, nelitists, pmutation, pselection, tourn_size, η)`
 
 
 Notes
 =====
 
-- If `nE` is unspecified, it defaults to 5% of the population.
-- If `pM` is unspecified, it defaults to 0.01.
-- If `pS` is unspecified, it defaults to 0.65.
-- If `tSize` is unspecified, it defaults to 2.
+- If `nelitists` is unspecified, it defaults to 5% of the population.
+- If `pmutation` is unspecified, it defaults to 0.01.
+- If `pselection` is unspecified, it defaults to 0.65.
+- If `tourn_size` is unspecified, it defaults to 2.
 - If `η` is unspecified, it defaults to 2.
 """
 type Inversion
     data::Matrix
-    popSize::Integer
-    zBounds::Array{LayerBC}
-    rBounds::Array{LayerBC}
+    popsize::Integer
+    depth_lims::Array{LayerBC}
+    res_lims::Array{LayerBC}
 
-    nE::Integer
-    pM::Real
-    pS::Real
-    tSize::Integer
+    nelitists::Integer
+    pmutation::Real
+    pselection::Real
+    tourn_size::Integer
 
     η::Integer
 
     pop::Array{Model}
     gen::Int
 
-    function Inversion(data::Matrix, popSize::Integer, zBounds::Array{LayerBC},
-                       rBounds::Array{LayerBC})
-        Inversion(data, popSize, zBounds, rBounds, ceil(Integer, 0.05*popSize), 0.01, 0.65, 2, 2)
+    function Inversion(data::Matrix, popsize::Integer, depth_lims::Array{LayerBC},
+                       res_lims::Array{LayerBC})
+        Inversion(data, popsize, depth_lims, res_lims, ceil(Integer, 0.05 * popsize), 0.01, 0.65, 2, 2)
     end
 
-    function Inversion(data::Matrix, popSize::Integer, zBounds::Array{LayerBC},
-                       rBounds::Array{LayerBC}, nE::Integer, pM::Real, pS::Real,
-                       tSize::Int, η::Integer)
-        if length(zBounds) != length(rBounds)
-            error("Length of zBounds != length of rBounds")
+    function Inversion(data::Matrix, popsize::Integer, depth_lims::Array{LayerBC},
+                       res_lims::Array{LayerBC}, nelitists::Integer, pmutation::Real, pselection::Real,
+                       tourn_size::Int, η::Integer)
+        if length(depth_lims) != length(res_lims)
+            error("Length of depth_lims != length of res_lims")
         end
 
-        nLayers = length(zBounds)
-        pop = vec(Array{Model}(popSize,1))
-        for i in 1:popSize
-            pop[i] = rand_model(nLayers, zBounds, rBounds)
+        nLayers = length(depth_lims)
+        pop = vec(Array{Model}(popsize,1))
+        for i in 1:popsize
+            pop[i] = rand_model(nLayers, depth_lims, res_lims)
             calcfitness!(pop[i], data)
         end
         sortPopulation!(pop)
-        new(data, popSize, zBounds, rBounds, nE, pM, pS, tSize, η, pop, 1)
+        new(data, popsize, depth_lims, res_lims, nelitists, pmutation, pselection, tourn_size, η, pop, 1)
     end
 end
 
@@ -112,10 +112,10 @@ function evolve!(I::Inversion, ngen=100; verbose=false)
         @printf("Gen: %d\tBest RMS:%.2f\tSize: %d\n", I.gen, I.pop[1].fitness, length(I.pop))
     end
     for i in 1:ngen
-        createNextGeneration!(I)
+        make_new_generation!(I)
 
-        for idx in 1:I.popSize
-            mutate!(I.pop[idx], I.pM)
+        for idx in 1:I.popsize
+            mutate!(I.pop[idx], I.pmutation)
             calcfitness!(I.pop[idx], I.data)
         end
 
@@ -155,26 +155,26 @@ Returns
 
 - `nothing`
 """
-function createNextGeneration!(I::Inversion)
-    nextGen = I.pop[1:I.nE]
+function make_new_generation!(I::Inversion)
+    nextgen = I.pop[1:I.nelitists]
 
     # Create new children to fill the next generation
-    while length(nextGen) < I.popSize
-        parentA = performTournament(I.pop, I.tSize, I.pS)
-        parentB = performTournament(I.pop, I.tSize, I.pS)
+    while length(nextgen) < I.popsize
+        p1 = performTournament(I.pop, I.tourn_size, I.pselection)
+        p2 = performTournament(I.pop, I.tourn_size, I.pselection)
 
-        childA, childB = crossover(parentA, parentB, I.η)
+        childA, childB = crossover(p1, p2, I.η)
         calcfitness!(childA, I.data)
         calcfitness!(childB, I.data)
-        push!(nextGen, childA, childB)
+        push!(nextgen, childA, childB)
     end
 
     # At most, the next generation can have 1 child too many. Kill
     # this child if this is the case.
-    if length(nextGen) > I.popSize
-        I.pop = nextGen[1:end-1]
+    if length(nextgen) > I.popsize
+        I.pop = nextgen[1:end-1]
     else
-        I.pop = nextGen
+        I.pop = nextgen
     end
 
     return
