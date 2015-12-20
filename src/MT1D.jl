@@ -20,32 +20,28 @@ Returns
 
 - `Tuple{ρ::Vector,Φ::Vector}`: Forward modelled apparent resistivity and phase.
 """
-function calc_response(model::Matrix, fs::Vector)
-    const μ0 = 4E-7 * π;
+function calc_response{T<:AbstractFloat}(model::Matrix{T}, fs::Vector{T})
+    const μ = 4E-7 * π
+    nf = length(fs)
+    nlayers = length(model[:,1])
 
-    zs = model[:,1];
-    ρs = model[:,2];
-    N = length(model[:,1]);
+    ρa = zeros(nf)
+    Φ = zeros(nf)
 
-    # Make sure zs is a row vector and ρs is a column vector
-    fs = reshape(fs, (1, length(fs)));
-    ρs = vec(ρs);
-
-    # N x length(fs) matrix with k(row,col) corresponding to k[N,fsIdx]
-    k = sqrt(-im * 8E-7 * π^2 * (ρs.^-1) * fs);
-    C = 1 ./ k[end,:];
-    Δz = zs[2:end] - zs[1:end-1];
-
-    for jj = N-1:-1:1
-        C = (C .* k[jj, :] + tanh(Δz[jj] * k[jj,:])) ./ (k[jj,:].^2 .* C .* tanh(Δz[jj] * k[jj,:]) + k[jj,:]);
+    for fidx in 1:nf
+        k = sqrt(-im * 2π * fs[fidx] * μ / model[end, 2])
+        C = 1 / k
+        for n in nlayers-1:-1:1
+            k = sqrt(-im * 2π * fs[fidx] * μ / model[n, 2])
+            Δz = model[n+1, 1] - model[n, 1]
+            C = (C * k + tanh(k * Δz)) / (C * k^2 * tanh(k * Δz) + k)
+        end
+        Z = 2π * fs[fidx] * μ * C
+        ρa[fidx] = abs(Z)^2 / (2π * fs[fidx] * μ)
+        Φ[fidx] = 90 - angle(Z) * 180 / π
     end
 
-    # Calculate surface impedance, resistivity and phase
-    Z  = μ0 * 2π * fs .* C[1,:];
-    ρa = (2π * fs * μ0).^-1 .* abs(Z).^2;
-    Φ  = 90 - angle(Z) * 180 / π;
-
-    return (vec(ρa), vec(Φ));
+    return (ρa, Φ);
 end
 
 """
