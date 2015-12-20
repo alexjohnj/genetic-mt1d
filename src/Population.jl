@@ -52,7 +52,7 @@ function select_with_tournament(P::Array{Model}, K::Integer, Ps::Real)
         error("Tournament size can not be less than 1 or greater than the population size")
     end
 
-    competitors = rand(P, K)
+    competitors = shuffle(P)[1:K]
     sortpop!(competitors)
 
     result = rand()
