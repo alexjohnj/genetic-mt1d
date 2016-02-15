@@ -3,7 +3,7 @@
 genetic-mt1d is a 1D magnetotelluric (MT) inversion program that uses a real
 valued genetic algorithm to find the best fitting inverse model for a data set
 of apparent resistivity and phase responses. It was written as part of a project
-for the GEOPH524 class at the University of Alberta. Although I can't make any
+for the GEOPH526 class at the University of Alberta. Although I can't make any
 guarantees about the correctness of the results, I've had success using it to
 reproduce the results of a paper by [Jones & Ferguson (2001)][electric-moho]
 where they inverted 1D data to find the electric Moho.
